@@ -329,6 +329,41 @@
     .fotos { grid-template-columns: repeat(3, 1fr); }
     .previas img { width: 72px; height: 72px; }
   }
+  /* Cápsula de acceso: pantalla de bloqueo y panel de Renzo */
+  .capsula { position: fixed; inset: 0; z-index: 60; background: var(--surface); display: grid; place-items: center; padding: 24px 16px; overflow: auto; }
+  #capsula-admin { z-index: 61; background: var(--scrim); backdrop-filter: blur(6px); }
+  .capsula .tarjeta { width: 100%; max-width: 440px; display: grid; gap: 14px; background: var(--surface-low); border-radius: 28px; padding: 28px 24px; box-shadow: var(--shadow-3); }
+  .capsula .candado { width: 64px; height: 64px; border-radius: 20px; background: var(--primary-container); color: var(--on-primary-container); display: grid; place-items: center; }
+  .capsula .candado svg { width: 32px; height: 32px; }
+  .capsula h2 { font-size: 1.5rem; }
+  .capsula h3 { font-size: .8rem; font-weight: 500; letter-spacing: .04em; text-transform: uppercase; color: var(--on-surface-variant); margin-top: 6px; }
+  .capsula p { color: var(--on-surface-variant); font-size: .95rem; }
+  .capsula .acciones { display: grid; gap: 10px; }
+  .capsula .acciones .btn { min-height: 48px; }
+  .capsula .pulso { display: inline-flex; align-items: center; gap: 10px; font-weight: 500; color: var(--primary); }
+  .capsula .pulso::before { content: ""; width: 10px; height: 10px; border-radius: 50%; background: var(--primary); animation: pulso 1.2s ease-in-out infinite; }
+  @keyframes pulso { 0%, 100% { opacity: .3; transform: scale(.8); } 50% { opacity: 1; transform: scale(1.1); } }
+  .capsula input.pin { font-family: var(--mono); font-size: 1.4rem; letter-spacing: .35em; text-align: center; }
+  .capsula .error { color: var(--error); font-size: .875rem; font-weight: 500; }
+  .capsula .error:empty { display: none; }
+  .capsula .cerrar { justify-self: end; }
+  .capsula .enlinea { display: flex; gap: 8px; align-items: center; }
+  .capsula .enlinea input { flex: 1; min-width: 0; }
+  .solicitud { display: grid; gap: 8px; padding: 12px 14px; border-radius: 16px; background: var(--surface-c); }
+  .solicitud .fila { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .solicitud b { font-weight: 500; }
+  .solicitud small { color: var(--on-surface-variant); }
+  .interruptor { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 14px; border-radius: 16px; background: var(--surface-c); cursor: pointer; }
+  .interruptor b { font-weight: 500; }
+  .interruptor small { color: var(--on-surface-variant); }
+  .interruptor input { width: 22px; height: 22px; accent-color: var(--primary); flex: none; }
+  .btn-candado { position: relative; display: grid; place-items: center; width: 40px; height: 40px; border: 0; border-radius: 20px; background: transparent; color: var(--on-surface-variant); flex: none; }
+  .btn-candado:hover { background: color-mix(in srgb, var(--on-surface) 8%, transparent); }
+  .btn-candado.activo { color: var(--primary); }
+  .btn-candado .globo { position: absolute; top: 1px; right: 1px; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px; background: var(--error); color: #fff; font-size: .7rem; font-weight: 700; display: grid; place-items: center; }
+  .acceso-hasta { font-size: .75rem; color: var(--on-surface-variant); }
+  body.bloqueada { overflow: hidden; }
+
   @media (min-width: 641px) { .fab { display: none; } }
   @media (prefers-reduced-motion: no-preference) {
     .lote { animation: entra .3s ease both; }
@@ -343,7 +378,7 @@
     <div class="logo" aria-hidden="true"><svg class="ic" viewBox="0 0 24 24"><path d="M13 11.33 18 18H6l5-6.67V6h2m2.96-2H8.04c-.42 0-.65.48-.39.81L9 6.5v4.17L3.2 18.4c-.49.66-.02 1.6.8 1.6h16c.82 0 1.29-.94.8-1.6L15 10.67V6.5l1.35-1.69c.26-.33.03-.81-.39-.81z"/></svg></div>
     <div class="titulos">
       <h1>Bitácora HOTLUB</h1>
-      <span class="sub"><span class="estado-red" id="estado-red"><span class="punto"></span><span id="estado-red-txt">Conectando…</span></span></span>
+      <span class="sub"><span class="estado-red" id="estado-red"><span class="punto"></span><span id="estado-red-txt">Conectando…</span></span> <span class="acceso-hasta" id="acceso-hasta" hidden></span></span>
     </div>
     <div class="contadores" aria-live="polite">
       <span class="contador"><b id="c-lotes">0</b> lotes</span>
@@ -351,6 +386,7 @@
       <span class="contador"><b id="c-trucos">0</b> trucos ✓</span>
     </div>
     <button class="btn tonal chico" id="btn-instalar" hidden>Instalar</button>
+    <button class="btn-candado" id="btn-candado" type="button" aria-label="Cápsula de acceso" title="Cápsula de acceso"><svg class="ic" viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg><span class="globo" id="candado-globo" hidden>0</span></button>
   </div>
 </header>
 
@@ -532,6 +568,8 @@
 
 <button class="fab" id="fab-nuevo" type="button" hidden><svg class="ic" viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>Nuevo lote</button>
 <div class="visor" id="visor" hidden><img id="visor-img" alt=""></div>
+<div class="capsula" id="capsula" hidden aria-live="polite"></div>
+<div class="capsula" id="capsula-admin" hidden role="dialog" aria-label="Cápsula de acceso"></div>
 <div class="snack" id="toast" role="status" hidden></div>
 
 <script>
@@ -1309,12 +1347,230 @@
     } catch (ex) { $("#tr-error").textContent = mensajeError(ex); }
   });
 
+  // --- Cápsula de acceso ---------------------------------------------------
+  // Si Renzo la activa, cada celular pide permiso al abrir la app y Renzo lo aprueba por horas
+  // desde el candado de arriba. Renzo se identifica con un PIN; su celular lo recuerda.
+  const CAP = { cfg: null, cfgLista: false, error: null, acc: null, accesos: [], admin: false, timer: null, vista: null, avisados: new Set(), adminAbierto: false, fallos: 0, bloqueoHasta: 0 };
+  const lsGet = (k) => { try { return localStorage.getItem(k); } catch (_) { return null; } };
+  const lsSet = (k, v) => { try { if (v == null) localStorage.removeItem(k); else localStorage.setItem(k, v); } catch (_) {} };
+  const dispositivoId = (() => {
+    let id = lsGet("bitacora-dispositivo");
+    if (!id) { id = "d" + Date.now().toString(36) + Math.random().toString(36).slice(2, 8); lsSet("bitacora-dispositivo", id); }
+    return id;
+  })();
+  async function hashPin(pin) {
+    const datos = new TextEncoder().encode("hotlub·" + String(pin).trim());
+    const buf = await crypto.subtle.digest("SHA-256", datos);
+    return Array.from(new Uint8Array(buf)).map((b) => b.toString(16).padStart(2, "0")).join("");
+  }
+  const esAdmin = () => !!(CAP.cfg && CAP.cfg.pinHash && lsGet("bitacora-admin") === CAP.cfg.pinHash);
+  const accesoVigente = () => !!(CAP.acc && CAP.acc.estado === "aprobado" && CAP.acc.hasta && new Date(CAP.acc.hasta) > new Date());
+  const fmtHora = (iso) => { const d = new Date(iso); return String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0"); };
+  const haceCuanto = (iso) => { if (!iso) return ""; const m = Math.round((Date.now() - new Date(iso)) / 60000); return m < 1 ? "ahora mismo" : m < 60 ? "hace " + m + " min" : "hace " + Math.round(m / 60) + " h"; };
+  const tipoDispositivo = () => /iPhone|iPad/.test(navigator.userAgent) ? "iPhone" : /Android/.test(navigator.userAgent) ? "Android" : "Computadora";
+  const iconoCandado = () => { const s = document.createElementNS("http://www.w3.org/2000/svg", "svg"); s.setAttribute("viewBox", "0 0 24 24"); s.setAttribute("class", "ic"); const p = document.createElementNS("http://www.w3.org/2000/svg", "path"); p.setAttribute("d", "M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"); s.append(p); return s; };
+  const pinInput = (ph) => h("input", { class: "pin", type: "password", inputmode: "numeric", maxlength: "8", autocomplete: "off", placeholder: ph || "••••" });
+
+  function pintaCandado() {
+    const activa = !!(CAP.cfg && CAP.cfg.activa);
+    $("#btn-candado").classList.toggle("activo", CAP.admin);
+    const pend = CAP.admin ? CAP.accesos.filter((a) => a.estado === "pendiente").length : 0;
+    const g = $("#candado-globo"); g.hidden = !pend; g.textContent = pend;
+    const ah = $("#acceso-hasta");
+    if (activa && CAP.admin) { ah.hidden = false; ah.textContent = "· cápsula activa"; }
+    else if (activa && accesoVigente()) { ah.hidden = false; ah.textContent = "· acceso hasta las " + fmtHora(CAP.acc.hasta); }
+    else ah.hidden = true;
+  }
+
+  function evaluarCapsula() {
+    clearTimeout(CAP.timer);
+    CAP.admin = esAdmin();
+    const activa = !!(CAP.cfg && CAP.cfg.activa);
+    const abierta = CAP.cfgLista && !CAP.error && (!activa || CAP.admin || accesoVigente());
+    const cap = $("#capsula");
+    if (abierta) { cap.hidden = true; document.body.classList.remove("bloqueada"); CAP.vista = null; }
+    else {
+      const a = CAP.acc || {};
+      const clave = [CAP.cfgLista, CAP.error, a.estado, a.hasta, a.pedido, !!(CAP.cfg && CAP.cfg.whatsapp)].join("|");
+      if (clave !== CAP.vista) { CAP.vista = clave; renderCapsula(); }
+      cap.hidden = false; document.body.classList.add("bloqueada");
+    }
+    if (abierta && activa && !CAP.admin) {
+      const resta = new Date(CAP.acc.hasta) - Date.now();
+      CAP.timer = setTimeout(evaluarCapsula, Math.max(1000, Math.min(resta + 500, 2000000000)));
+    }
+    pintaCandado();
+    if (CAP.adminAbierto) renderAdmin();
+  }
+
+  async function pedirAcceso(nombre) {
+    lsSet("bitacora-nombre", nombre);
+    await db.doc("accesos/" + dispositivoId).set({ nombre, tipo: tipoDispositivo(), pedido: new Date().toISOString(), estado: "pendiente", hasta: null }, { merge: true });
+    avisar("Pedido enviado a Renzo");
+  }
+  function botonWhatsApp(nombre) {
+    const num = (CAP.cfg && CAP.cfg.whatsapp) || "";
+    if (!num) return h("p", {}, "Avísale a Renzo por WhatsApp para que abra su app y apruebe.");
+    const texto = "Hola Renzo, soy " + (nombre || "") + ". Pido acceso a la Bitácora HOTLUB: apruébalo desde la app (el candado de arriba).";
+    return h("a", { class: "btn", href: "https://wa.me/" + num + "?text=" + encodeURIComponent(texto), target: "_blank", rel: "noopener" }, "Avisar a Renzo por WhatsApp");
+  }
+
+  function renderCapsula() {
+    const cap = $("#capsula"); cap.replaceChildren();
+    const soyRenzo = h("button", { class: "btn texto", type: "button", onclick: abrirAdmin }, "Soy Renzo");
+    let cuerpo;
+    if (CAP.error) {
+      cuerpo = [h("h2", {}, "No se pudo comprobar el acceso"), h("p", {}, CAP.error), h("button", { class: "btn", type: "button", onclick: () => location.reload() }, "Reintentar")];
+    } else if (!CAP.cfgLista) {
+      const sinSenal = h("p", { hidden: true }, "Sin señal no se puede comprobar el acceso. Conéctate y vuelve a abrir la app.");
+      setTimeout(() => { sinSenal.hidden = false; }, 6000);
+      cuerpo = [h("h2", {}, "Bitácora HOTLUB"), h("p", { class: "pulso" }, "Comprobando acceso…"), sinSenal];
+    } else {
+      const a = CAP.acc;
+      const estado = !a ? "nuevo" : (a.estado === "aprobado" && !accesoVigente()) ? "caducado" : a.estado;
+      if (estado === "pendiente") {
+        cuerpo = [h("h2", {}, "Pedido enviado"), h("p", { class: "pulso" }, "Esperando a que Renzo apruebe…"),
+          h("p", {}, "Renzo lo ve en su app, en el candado de arriba. Esta pantalla se abre sola en cuanto apruebe."),
+          h("div", { class: "acciones" }, botonWhatsApp(a.nombre), h("button", { class: "btn outl", type: "button", onclick: () => pedirAcceso(a.nombre).catch((ex) => avisar(mensajeError(ex))) }, "Volver a enviar el pedido"))];
+      } else {
+        const textos = {
+          nuevo: ["App protegida", "Esta app tiene cápsula de seguridad: pides acceso y Renzo lo aprueba desde su celular por unas horas."],
+          caducado: ["Se acabó el tiempo", "Tu acceso terminó" + (a && a.hasta ? " a las " + fmtHora(a.hasta) : "") + ". Pide otra vez y Renzo te da más tiempo."],
+          rechazado: ["Renzo no aprobó el acceso", "Habla con él y vuelve a pedir."],
+          cortado: ["Renzo cerró el acceso", "Pide otra vez cuando lo necesites."]
+        };
+        const t = textos[estado] || textos.nuevo;
+        const inNombre = h("input", { id: "cap-nombre", placeholder: "Tu nombre (ej. Kike)", value: lsGet("bitacora-nombre") || (a && a.nombre) || "", autocomplete: "name" });
+        const err = h("p", { class: "error" });
+        const btn = h("button", { class: "btn", type: "button", onclick: async () => {
+          const n = inNombre.value.trim(); if (!n) { err.textContent = "Escribe tu nombre."; return; }
+          btn.disabled = true;
+          try { await pedirAcceso(n); } catch (ex) { err.textContent = mensajeError(ex); btn.disabled = false; }
+        } }, estado === "nuevo" ? "Pedir acceso a Renzo" : "Pedir acceso otra vez");
+        cuerpo = [h("h2", {}, t[0]), h("p", {}, t[1]),
+          h("div", { class: "campo" }, h("label", { for: "cap-nombre" }, "¿Quién eres?"), inNombre), err, h("div", { class: "acciones" }, btn)];
+      }
+    }
+    cap.append(h("div", { class: "tarjeta" }, h("div", { class: "candado" }, iconoCandado()), ...cuerpo, soyRenzo));
+  }
+
+  function abrirAdmin() { CAP.adminAbierto = true; renderAdmin(); $("#capsula-admin").hidden = false; }
+  function cerrarAdmin() { CAP.adminAbierto = false; $("#capsula-admin").hidden = true; }
+  const guardarCfg = (datos) => db.doc("config/capsula").set(datos, { merge: true });
+
+  function renderAdmin() {
+    const box = $("#capsula-admin"); box.replaceChildren();
+    const cerrar = h("button", { class: "btn texto cerrar", type: "button", onclick: cerrarAdmin }, "Cerrar");
+    const err = h("p", { class: "error" });
+    const falla = (ex) => { err.textContent = mensajeError(ex); };
+    let cuerpo;
+    if (!CAP.admin) {
+      const nuevo = !(CAP.cfg && CAP.cfg.pinHash);
+      const pin = pinInput(), pin2 = nuevo ? pinInput() : null;
+      const btn = h("button", { class: "btn", type: "button", onclick: async () => {
+        if (Date.now() < CAP.bloqueoHasta) { err.textContent = "Espera " + Math.ceil((CAP.bloqueoHasta - Date.now()) / 1000) + " s antes de volver a intentar."; return; }
+        const v = pin.value.trim();
+        if (v.length < 4) { err.textContent = "El PIN debe tener al menos 4 números."; return; }
+        if (nuevo && pin2.value.trim() !== v) { err.textContent = "Los dos PIN no coinciden."; return; }
+        try {
+          const hsh = await hashPin(v);
+          if (nuevo) { await guardarCfg({ pinHash: hsh, creado: new Date().toISOString() }); CAP.cfg = Object.assign({}, CAP.cfg || {}, { pinHash: hsh }); }
+          else if (hsh !== CAP.cfg.pinHash) {
+            CAP.fallos++; if (CAP.fallos >= 3) { CAP.fallos = 0; CAP.bloqueoHasta = Date.now() + 30000; }
+            err.textContent = "PIN incorrecto."; return;
+          }
+          lsSet("bitacora-admin", hsh); CAP.fallos = 0;
+          avisar(nuevo ? "PIN creado. Este celular es el de Renzo." : "Hola, Renzo.");
+          evaluarCapsula();
+        } catch (ex) { falla(ex); }
+      } }, nuevo ? "Crear PIN" : "Entrar");
+      cuerpo = [h("h2", {}, nuevo ? "Crear el PIN de Renzo" : "PIN de Renzo"),
+        h("p", {}, nuevo ? "Todavía no hay PIN. Quien lo cree será quien apruebe los accesos: hazlo en el celular de Renzo." : "Solo Renzo aprueba accesos. Escribe su PIN."),
+        h("div", { class: "campo" }, h("label", {}, "PIN"), pin),
+        pin2 && h("div", { class: "campo" }, h("label", {}, "Repite el PIN"), pin2),
+        err, h("div", { class: "acciones" }, btn)];
+    } else {
+      const cfg = CAP.cfg || {};
+      const sw = h("input", { type: "checkbox", role: "switch" }); sw.checked = !!cfg.activa;
+      sw.addEventListener("change", async () => {
+        try { await guardarCfg({ activa: sw.checked }); avisar(sw.checked ? "Cápsula activada: cada celular pedirá permiso" : "Cápsula apagada: la app abre libre"); }
+        catch (ex) { falla(ex); sw.checked = !sw.checked; }
+      });
+      const interruptor = h("label", { class: "interruptor" }, h("span", {}, h("b", {}, "Cápsula activada"), h("br"), h("small", {}, "Cada celular pide permiso al abrir la app")), sw);
+
+      const pend = CAP.accesos.filter((a) => a.estado === "pendiente").sort((a, b) => (b.pedido || "").localeCompare(a.pedido || ""));
+      const vig = CAP.accesos.filter((a) => a.estado === "aprobado" && a.hasta && new Date(a.hasta) > new Date());
+      const cambiar = (id, datos, msg) => db.doc("accesos/" + id).update(datos).then(() => msg && avisar(msg)).catch(falla);
+      const aprobar = (a, horas) => cambiar(a.id, { estado: "aprobado", hasta: new Date(Date.now() + horas * 3600000).toISOString(), aprobadoEl: new Date().toISOString() }, (a.nombre || "Acceso") + ": " + horas + " h");
+      const listaPend = pend.length ? pend.map((a) => h("div", { class: "solicitud" },
+        h("div", {}, h("b", {}, a.nombre || "Sin nombre"), " ", h("small", {}, (a.tipo || "") + " · " + haceCuanto(a.pedido))),
+        h("div", { class: "fila" },
+          h("button", { class: "btn chico", type: "button", onclick: () => aprobar(a, 1) }, "1 hora"),
+          h("button", { class: "btn chico tonal", type: "button", onclick: () => aprobar(a, 4) }, "4 horas"),
+          h("button", { class: "btn chico tonal", type: "button", onclick: () => aprobar(a, 12) }, "12 horas"),
+          h("button", { class: "btn chico outl", type: "button", onclick: () => cambiar(a.id, { estado: "rechazado", hasta: null }) }, "No")))) : [h("p", {}, "Nadie está pidiendo acceso ahora.")];
+      const listaVig = vig.map((a) => h("div", { class: "solicitud" }, h("div", { class: "fila" },
+        h("b", {}, a.nombre || "Sin nombre"), h("small", {}, "hasta las " + fmtHora(a.hasta)), h("span", { style: "flex:1" }),
+        h("button", { class: "btn chico outl", type: "button", onclick: () => cambiar(a.id, { estado: "cortado", hasta: null }, "Acceso cortado") }, "Cortar"))));
+
+      const inWa = h("input", { inputmode: "tel", placeholder: "51 9xx xxx xxx", value: cfg.whatsapp || "" });
+      const btnWa = h("button", { class: "btn chico tonal", type: "button", onclick: () => guardarCfg({ whatsapp: inWa.value.replace(/\D/g, "") }).then(() => avisar("Número guardado")).catch(falla) }, "Guardar");
+      const btnNoti = ("Notification" in window) ? h("button", { class: "btn chico outl", type: "button", onclick: async () => {
+        const p = await Notification.requestPermission();
+        avisar(p === "granted" ? "Este celular avisará cuando alguien pida acceso (con la app abierta)" : "No se dieron permisos de aviso");
+        renderAdmin();
+      } }, Notification.permission === "granted" ? "Avisos activados en este celular" : "Avisarme en este celular") : null;
+      const inPinN = pinInput();
+      const btnPin = h("button", { class: "btn chico outl", type: "button", onclick: async () => {
+        const v = inPinN.value.trim(); if (v.length < 4) { err.textContent = "El PIN debe tener al menos 4 números."; return; }
+        try { const hsh = await hashPin(v); await guardarCfg({ pinHash: hsh }); lsSet("bitacora-admin", hsh); inPinN.value = ""; avisar("PIN cambiado"); } catch (ex) { falla(ex); }
+      } }, "Cambiar PIN");
+      const btnSalir = h("button", { class: "btn texto", type: "button", onclick: () => { lsSet("bitacora-admin", null); cerrarAdmin(); evaluarCapsula(); avisar("Este celular ya no es el de Renzo"); } }, "Dejar de ser Renzo en este celular");
+
+      cuerpo = [h("h2", {}, "Cápsula de acceso"), h("p", {}, "Hola, Renzo. Aquí apruebas quién usa la app y por cuánto tiempo."), interruptor,
+        h("h3", {}, "Piden acceso" + (pend.length ? " (" + pend.length + ")" : "")), ...listaPend,
+        vig.length ? h("h3", {}, "Con acceso ahora") : null, ...listaVig,
+        h("h3", {}, "Ajustes"),
+        h("div", { class: "campo" }, h("label", {}, "Tu WhatsApp (con 51 delante)"), h("div", { class: "enlinea" }, inWa, btnWa)),
+        h("p", {}, h("small", {}, "Con el número guardado, quien pide acceso tiene un botón para avisarte por WhatsApp.")),
+        btnNoti,
+        h("div", { class: "campo" }, h("label", {}, "Cambiar el PIN"), h("div", { class: "enlinea" }, inPinN, btnPin)),
+        err, btnSalir];
+    }
+    box.append(h("div", { class: "tarjeta" }, ...cuerpo, cerrar));
+  }
+
+  function notificarPedido(a) {
+    avisar((a.nombre || "Alguien") + " pide acceso a la app: toca el candado para aprobar");
+    try { if (navigator.vibrate) navigator.vibrate([150, 80, 150]); } catch (_) {}
+    try { if ("Notification" in window && Notification.permission === "granted") new Notification("Bitácora HOTLUB", { body: (a.nombre || "Alguien") + " pide acceso a la app", icon: "./icon-192.png", tag: "acceso-" + a.id }); } catch (_) {}
+  }
+
+  function iniciarCapsula() {
+    $("#btn-candado").addEventListener("click", abrirAdmin);
+    document.addEventListener("visibilitychange", () => { if (!document.hidden) evaluarCapsula(); });
+    evaluarCapsula();
+    db.doc("config/capsula").onSnapshot((d) => { CAP.cfg = d.exists ? d.data() : null; CAP.cfgLista = true; CAP.error = null; evaluarCapsula(); },
+      (e) => { CAP.error = mensajeError(e); evaluarCapsula(); });
+    db.doc("accesos/" + dispositivoId).onSnapshot((d) => { CAP.acc = d.exists ? Object.assign({ id: d.id }, d.data()) : null; evaluarCapsula(); }, () => {});
+    db.collection("accesos").onSnapshot((snap) => {
+      CAP.accesos = snap.docs.map((x) => Object.assign({ id: x.id }, x.data()));
+      if (esAdmin()) for (const a of CAP.accesos) {
+        if (a.estado !== "pendiente" || a.id === dispositivoId || CAP.avisados.has(a.id + a.pedido)) continue;
+        CAP.avisados.add(a.id + a.pedido);
+        if (a.pedido && Date.now() - new Date(a.pedido) < 10 * 60000) notificarPedido(a);
+      }
+      evaluarCapsula();
+    }, () => {});
+  }
+
   // --- conexión con la base de datos ---------------------------------------
   const ordenLotes = (a, b) => (b.fecha || "").localeCompare(a.fecha || "") || (b.creado || "").localeCompare(a.creado || "");
   if (!db) {
     const a = $("#aviso-db"); a.textContent = "No se pudo abrir la base de datos. Revisa la conexión y vuelve a abrir la app."; a.hidden = false;
   } else {
     const fallo = (e) => { const a = $("#aviso-db"); a.textContent = mensajeError(e); a.hidden = false; };
+    iniciarCapsula();
     db.collection("lotes").onSnapshot((snap) => {
       st.lotes = snap.docs.map((x) => ({ id: x.id, ...x.data() })).sort(ordenLotes);
       contadores(); renderDiario(); renderHoy();
