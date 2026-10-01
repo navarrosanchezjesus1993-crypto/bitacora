@@ -1,0 +1,1146 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#00696f" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0e1415" media="(prefers-color-scheme: dark)">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Bitácora">
+<meta name="description" content="Bitácora del laboratorio HOTLUB: lotes, fotos, trucos, compras y calculadora.">
+<title>Bitácora HOTLUB</title>
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="icon" href="./icon-192.png">
+<link rel="apple-touch-icon" href="./icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Roboto+Mono:wght@400;500;600&display=swap">
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<style>
+  /* Material Design 3 · tokens de color (esquema teal, pensado para una app de laboratorio) */
+  :root {
+    color-scheme: light;
+    --primary: #00696f; --on-primary: #ffffff;
+    --primary-container: #6ff6ff; --on-primary-container: #002022;
+    --secondary-container: #cce8e9; --on-secondary-container: #051f21;
+    --surface: #f4fafa; --surface-low: #eef4f4; --surface-c: #e8efef; --surface-high: #e2e9e9; --surface-highest: #dde3e3;
+    --on-surface: #161d1d; --on-surface-variant: #3f4949;
+    --outline: #6f7979; --outline-variant: #bec8c8;
+    --inverse-surface: #2b3232; --inverse-on-surface: #ecf2f2;
+    --error: #ba1a1a; --error-container: #ffdad6; --on-error-container: #410002;
+    --ok: #1e6b3f; --ok-container: #cdefd8; --on-ok-container: #002110;
+    --warn: #7a5300; --warn-container: #ffdea3; --on-warn-container: #271900;
+    --scrim: rgba(22, 29, 29, .5);
+    --shadow-1: 0 1px 2px rgba(0,0,0,.3), 0 1px 3px 1px rgba(0,0,0,.15);
+    --shadow-3: 0 1px 3px rgba(0,0,0,.3), 0 4px 8px 3px rgba(0,0,0,.15);
+    --fuente: "Roboto", "Segoe UI", system-ui, -apple-system, sans-serif;
+    --mono: "Roboto Mono", ui-monospace, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      color-scheme: dark;
+      --primary: #4cd9e0; --on-primary: #00373a;
+      --primary-container: #004f53; --on-primary-container: #6ff6ff;
+      --secondary-container: #324b4d; --on-secondary-container: #cce8e9;
+      --surface: #0e1415; --surface-low: #161d1d; --surface-c: #1a2121; --surface-high: #252b2b; --surface-highest: #2f3636;
+      --on-surface: #dde4e4; --on-surface-variant: #bec8c8;
+      --outline: #899393; --outline-variant: #3f4949;
+      --inverse-surface: #dde4e4; --inverse-on-surface: #2b3232;
+      --error: #ffb4ab; --error-container: #93000a; --on-error-container: #ffdad6;
+      --ok: #7fd69b; --ok-container: #1b3b2a; --on-ok-container: #cdefd8;
+      --warn: #f5c04c; --warn-container: #3e2e00; --on-warn-container: #ffdea3;
+      --scrim: rgba(0,0,0,.6);
+    }
+  }
+
+  * { box-sizing: border-box; }
+  html { height: 100%; }
+  body {
+    margin: 0; min-height: 100%; background: var(--surface); color: var(--on-surface);
+    font-family: var(--fuente); font-size: 16px; line-height: 1.5;
+    padding-inline: 16px; padding-block: env(safe-area-inset-top, 0px) 40px;
+    -webkit-tap-highlight-color: transparent; overscroll-behavior-y: contain;
+  }
+  h1, h2, h3 { margin: 0; line-height: 1.25; text-wrap: balance; font-weight: 500; }
+  h2 { font-size: 1.375rem; }
+  h3 { font-size: 1rem; }
+  p { margin: 0; }
+  button, input, textarea, select { font: inherit; color: inherit; }
+  button { cursor: pointer; }
+  img { max-width: 100%; }
+  [hidden] { display: none !important; }
+  :focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+  .mono { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+  svg.ic { width: 24px; height: 24px; fill: currentColor; flex: none; }
+  .envoltura { max-width: 960px; margin: 0 auto; display: grid; gap: 20px; }
+
+  /* Barra superior */
+  header.appbar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; margin-inline: -16px; background: var(--surface); transition: background-color .2s; }
+  header.appbar.elevada { background: var(--surface-c); }
+  .appbar .fila { max-width: 960px; margin: 0 auto; display: flex; align-items: center; gap: 14px; min-height: 64px; padding: 8px 16px; }
+  .appbar .logo { width: 40px; height: 40px; border-radius: 12px; background: var(--primary-container); color: var(--on-primary-container); display: grid; place-items: center; flex: none; }
+  .appbar .titulos { display: grid; gap: 1px; min-width: 0; flex: 1; }
+  .appbar h1 { font-size: 1.375rem; font-weight: 400; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .appbar .sub { font-size: .75rem; color: var(--on-surface-variant); letter-spacing: .03em; }
+  .contadores { display: flex; gap: 8px; flex-wrap: wrap; }
+  .contador { display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 12px; border-radius: 8px; border: 1px solid var(--outline-variant); font-size: .8rem; color: var(--on-surface-variant); white-space: nowrap; }
+  .contador b { font-weight: 500; color: var(--on-surface); font-variant-numeric: tabular-nums; }
+  .estado-red { display: inline-flex; align-items: center; gap: 6px; font-size: .75rem; color: var(--on-surface-variant); }
+  .estado-red .punto { width: 8px; height: 8px; border-radius: 50%; background: var(--ok); }
+  .estado-red.off .punto { background: var(--warn); }
+
+  /* Navegación */
+  nav.navegacion { margin-inline: -16px; background: var(--surface); border-bottom: 1px solid var(--outline-variant); }
+  nav.navegacion .fila { max-width: 960px; margin: 0 auto; display: flex; padding: 0 8px; }
+  .pestana { flex: 1 1 0; display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 48px; padding: 0 12px; border: 0; background: none; border-radius: 0; color: var(--on-surface-variant); font-size: .875rem; font-weight: 500; position: relative; }
+  .pestana::after { content: ""; position: absolute; left: 12px; right: 12px; bottom: 0; height: 3px; border-radius: 3px 3px 0 0; background: transparent; }
+  .pestana[aria-selected="true"] { color: var(--primary); }
+  .pestana[aria-selected="true"]::after { background: var(--primary); }
+  .pestana:hover { background: color-mix(in srgb, var(--on-surface) 8%, transparent); }
+  .pestana .icono { display: grid; place-items: center; border-radius: 16px; padding: 4px 0; width: 56px; transition: background-color .2s; }
+
+  /* Botones */
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 40px; padding: 0 24px; border: 0; border-radius: 20px; background: var(--primary); color: var(--on-primary); font-size: .875rem; font-weight: 500; transition: box-shadow .15s, background-color .15s; text-decoration: none; }
+  .btn:hover { box-shadow: var(--shadow-1); }
+  .btn:active { box-shadow: none; }
+  .btn:disabled { background: color-mix(in srgb, var(--on-surface) 12%, transparent); color: color-mix(in srgb, var(--on-surface) 38%, transparent); box-shadow: none; cursor: default; }
+  .btn.sec, .btn.tonal { background: var(--secondary-container); color: var(--on-secondary-container); }
+  .btn.outl { background: transparent; color: var(--primary); border: 1px solid var(--outline); }
+  .btn.texto { background: transparent; color: var(--primary); padding: 0 12px; }
+  .btn.texto:hover { background: color-mix(in srgb, var(--primary) 8%, transparent); box-shadow: none; }
+  .btn.chico { min-height: 32px; padding: 0 16px; font-size: .8rem; }
+  .btn.icono { padding-left: 16px; }
+  .btn svg.ic { width: 18px; height: 18px; }
+  .fab { position: fixed; right: 16px; bottom: calc(16px + env(safe-area-inset-bottom, 0px)); z-index: 25; display: inline-flex; align-items: center; gap: 10px; height: 56px; padding: 0 20px 0 16px; border: 0; border-radius: 16px; background: var(--primary-container); color: var(--on-primary-container); font-size: .875rem; font-weight: 500; box-shadow: var(--shadow-3); }
+
+  /* Chips */
+  .chipfiltro { display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 14px; border-radius: 8px; border: 1px solid var(--outline); background: transparent; color: var(--on-surface-variant); font-size: .875rem; font-weight: 500; }
+  .chipfiltro[aria-pressed="true"] { background: var(--secondary-container); color: var(--on-secondary-container); border-color: transparent; }
+  .chipfiltro[aria-pressed="true"]::before { content: "✓"; font-size: .8rem; }
+  .chip { display: inline-flex; align-items: center; height: 24px; padding: 0 10px; border-radius: 8px; font-size: .75rem; font-weight: 500; white-space: nowrap; }
+  .chip.bien, .chip.ok { background: var(--ok-container); color: var(--on-ok-container); }
+  .chip.regular, .chip.probar { background: var(--warn-container); color: var(--on-warn-container); }
+  .chip.mal, .chip.cuidado { background: var(--error-container); color: var(--on-error-container); }
+  .chip.dato { background: var(--surface-highest); color: var(--on-surface-variant); }
+
+  .card { background: var(--surface-low); border-radius: 12px; padding: 16px; display: grid; gap: 12px; }
+  .card.alta { background: var(--surface-highest); }
+  .aviso { background: var(--warn-container); color: var(--on-warn-container); padding: 12px 16px; border-radius: 12px; font-size: .9rem; }
+  .error { color: var(--error); font-size: .85rem; }
+  .ayuda { font-size: .8rem; color: var(--on-surface-variant); }
+  .vacio { text-align: center; color: var(--on-surface-variant); padding: 36px 16px; border: 1px dashed var(--outline-variant); border-radius: 12px; }
+
+  /* Campos */
+  .campos { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; }
+  .campo { display: grid; gap: 4px; }
+  .campo.ancho { grid-column: 1 / -1; }
+  .campo label, .campo .lbl { font-size: .75rem; font-weight: 500; color: var(--on-surface-variant); letter-spacing: .03em; padding-left: 4px; }
+  .campo input, .campo textarea, .campo select, .buscar, .anadir input, form.seg textarea, .tabla-pesar input, .reloj input {
+    width: 100%; background: var(--surface-highest); border: 0; border-bottom: 1px solid var(--on-surface-variant); border-radius: 4px 4px 0 0; padding: 12px 16px; color: var(--on-surface); transition: box-shadow .15s;
+  }
+  .campo input:focus, .campo textarea:focus, .campo select:focus, .buscar:focus, .anadir input:focus, form.seg textarea:focus, .tabla-pesar input:focus, .reloj input:focus { outline: none; box-shadow: inset 0 -2px 0 var(--primary); border-bottom-color: var(--primary); }
+  .campo textarea { min-height: 80px; resize: vertical; }
+  .campo textarea.mono { font-size: .9rem; }
+  .estados { display: flex; flex-wrap: wrap; gap: 8px; }
+  .estados label { display: inline-flex; align-items: center; gap: 8px; height: 36px; padding: 0 14px 0 10px; border-radius: 8px; border: 1px solid var(--outline); font-size: .875rem; font-weight: 500; color: var(--on-surface-variant); cursor: pointer; }
+  .estados label:has(input:checked) { background: var(--secondary-container); color: var(--on-secondary-container); border-color: transparent; }
+  .estados input { accent-color: var(--primary); margin: 0; }
+  .pie-form { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  form.ficha { background: var(--surface-c); border-radius: 16px; padding: 20px; display: grid; gap: 16px; }
+  .fotobtns { display: flex; gap: 8px; flex-wrap: wrap; }
+  .fotobtns label { cursor: pointer; }
+  .soltar { border: 1px dashed var(--outline); border-radius: 12px; padding: 12px; text-align: center; color: var(--on-surface-variant); font-size: .85rem; }
+  .soltar.encima { border-color: var(--primary); color: var(--primary); background: var(--secondary-container); }
+  .previas { display: flex; flex-wrap: wrap; gap: 8px; }
+  .previas img { width: 84px; height: 84px; object-fit: cover; border-radius: 12px; }
+
+  /* Tira de pH (colores reales del papel indicador) */
+  .tira { display: grid; gap: 4px; }
+  .tira .barra { position: relative; height: 16px; border-radius: 8px; background: linear-gradient(90deg, #e2463a 0%, #f07d2c 20%, #f2c230 40%, #a9c83a 60%, #3fa55a 80%, #1f8a8a 100%); }
+  .tira .banda { position: absolute; top: -3px; bottom: -3px; border: 2px solid var(--on-surface); border-radius: 6px; opacity: .5; }
+  .tira .marca { position: absolute; top: -6px; width: 4px; height: 28px; margin-left: -2px; border-radius: 2px; background: var(--on-surface); box-shadow: 0 0 0 2px var(--surface-low); }
+  .tira .escala { display: flex; justify-content: space-between; font-family: var(--mono); font-size: .72rem; color: var(--on-surface-variant); }
+  .tira .leyenda { font-size: .78rem; color: var(--on-surface-variant); }
+
+  /* Diario */
+  .acciones { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; }
+  .filtros { display: flex; flex-wrap: wrap; gap: 8px; }
+  .buscar { width: min(280px, 100%); border-radius: 28px; border-bottom: 0; background: var(--surface-high); padding: 10px 18px; }
+  .buscar:focus { box-shadow: 0 0 0 2px var(--primary); }
+  .diario { display: grid; gap: 12px; }
+  .lote { background: var(--surface-low); border-radius: 12px; padding: 16px 16px 16px 20px; display: grid; gap: 12px; position: relative; overflow: hidden; }
+  .lote::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 6px; background: var(--color-estado, var(--outline-variant)); }
+  .lote[data-estado="bien"] { --color-estado: var(--ok); }
+  .lote[data-estado="regular"] { --color-estado: var(--warn); }
+  .lote[data-estado="mal"] { --color-estado: var(--error); }
+  .lote .cab { display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: center; justify-content: space-between; }
+  .lote .fecha { font-size: .8rem; color: var(--on-surface-variant); }
+  .lote h3 { font-size: 1.05rem; flex: 1 1 240px; }
+  .filas { display: grid; gap: 8px; margin: 0; }
+  .fila-dato { display: grid; grid-template-columns: 120px 1fr; gap: 10px; }
+  .fila-dato dt { font-size: .75rem; font-weight: 500; color: var(--on-surface-variant); padding-top: 3px; letter-spacing: .03em; }
+  .fila-dato dd { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; font-size: .95rem; }
+  .fila-dato dd.mono { font-size: .85rem; }
+  .leccion { background: var(--secondary-container); color: var(--on-secondary-container); border-radius: 12px; padding: 10px 14px; display: grid; gap: 2px; }
+  .leccion .lbl { font-size: .72rem; font-weight: 500; letter-spacing: .06em; text-transform: uppercase; }
+  .fotos { display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 8px; }
+  .fotos button { padding: 0; border: 0; border-radius: 12px; overflow: hidden; cursor: zoom-in; background: var(--surface-highest); aspect-ratio: 1; max-width: 100%; }
+  .fotos img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .seguimiento { border-top: 1px solid var(--outline-variant); padding-top: 12px; display: grid; gap: 10px; }
+  .seguimiento .nota { display: grid; gap: 6px; font-size: .95rem; }
+  .seguimiento .nota .fecha { font-size: .75rem; font-weight: 500; color: var(--primary); }
+  .pie-lote { display: flex; gap: 8px; flex-wrap: wrap; }
+  form.seg { display: grid; gap: 10px; background: var(--surface-c); border-radius: 12px; padding: 14px; }
+  form.seg textarea { min-height: 72px; }
+
+  /* Trucos y reglas */
+  .trucos { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; }
+  .truco { background: var(--surface-low); border-radius: 12px; padding: 16px; display: grid; gap: 8px; align-content: start; }
+  .truco .top { display: flex; justify-content: space-between; gap: 8px; align-items: center; }
+  .truco .num { font-size: .75rem; font-weight: 500; color: var(--primary); letter-spacing: .05em; text-transform: uppercase; }
+  .truco .que { font-weight: 500; }
+  .truco .porque { color: var(--on-surface-variant); font-size: .92rem; }
+  .truco .como { font-size: .82rem; color: var(--on-surface-variant); border-top: 1px solid var(--outline-variant); padding-top: 8px; }
+  ol.reglas { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; counter-reset: r; }
+  ol.reglas li { counter-increment: r; background: var(--surface-low); border-radius: 12px; padding: 14px 16px 14px 68px; position: relative; display: grid; gap: 4px; }
+  ol.reglas li::before { content: counter(r); position: absolute; left: 16px; top: 14px; width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; background: var(--primary-container); color: var(--on-primary-container); font-weight: 500; }
+  ol.reglas b { font-weight: 500; }
+  ol.reglas span { color: var(--on-surface-variant); font-size: .92rem; }
+
+  .visor { position: fixed; inset: 0; background: var(--scrim); backdrop-filter: blur(6px); display: grid; place-items: center; padding: 20px; z-index: 50; cursor: zoom-out; }
+  .visor img { max-width: 100%; max-height: 90vh; border-radius: 16px; box-shadow: var(--shadow-3); }
+
+  .hoy { background: var(--warn-container); color: var(--on-warn-container); border-radius: 12px; padding: 14px 16px; display: grid; gap: 10px; }
+  .hoy h2 { font-size: 1rem; display: flex; align-items: center; gap: 8px; }
+  .hoy ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+  .hoy li { display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: center; justify-content: space-between; border-top: 1px solid color-mix(in srgb, var(--on-warn-container) 20%, transparent); padding-top: 8px; }
+  .hoy li:first-child { border-top: 0; padding-top: 0; }
+  .hoy .cuando { font-size: .8rem; font-weight: 500; }
+  .hoy .cuando.tarde { color: var(--error); }
+  .hoy .btn { background: var(--on-warn-container); color: var(--warn-container); }
+
+  /* Hacer un lote */
+  .recetas { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 10px; }
+  .receta { position: relative; display: grid; gap: 4px; background: var(--surface-low); border: 1px solid var(--outline-variant); border-radius: 12px; padding: 14px 14px 14px 46px; cursor: pointer; }
+  .receta input { position: absolute; left: 16px; top: 17px; accent-color: var(--primary); margin: 0; width: 18px; height: 18px; }
+  .receta b { font-weight: 500; }
+  .receta span { font-size: .85rem; color: var(--on-surface-variant); }
+  .receta:has(input:checked) { background: var(--secondary-container); border-color: var(--primary); color: var(--on-secondary-container); }
+  .receta:has(input:checked) span { color: var(--on-secondary-container); }
+  .ajustes { display: flex; flex-wrap: wrap; gap: 12px; align-items: end; }
+  .ajustes .campo { min-width: 150px; flex: 1 1 150px; }
+  .alerta-agua { background: var(--error-container); color: var(--on-error-container); border-radius: 12px; padding: 10px 14px; font-size: .9rem; font-weight: 500; }
+  .seccion { display: grid; gap: 10px; }
+  .seccion h2 { font-size: 1.25rem; }
+  .tabla-pesar { overflow-x: auto; background: var(--surface-low); border-radius: 12px; }
+  .tabla-pesar table { border-collapse: collapse; width: 100%; }
+  .tabla-pesar th, .tabla-pesar td { text-align: left; padding: 12px 14px; border-bottom: 1px solid var(--outline-variant); vertical-align: middle; }
+  .tabla-pesar tr:last-child td { border-bottom: 0; }
+  .tabla-pesar th { font-size: .75rem; font-weight: 500; letter-spacing: .04em; color: var(--on-surface-variant); }
+  .tabla-pesar td.g { font-family: var(--mono); font-size: 1.25rem; font-weight: 500; text-align: right; white-space: nowrap; color: var(--primary); font-variant-numeric: tabular-nums; }
+  .tabla-pesar th.g { text-align: right; }
+  .tabla-pesar input { width: 104px; padding: 8px 10px; font-family: var(--mono); text-align: right; }
+  .tabla-pesar tr.total td { font-weight: 500; background: var(--surface-highest); }
+  .tabla-pesar tr.total td.g { color: var(--on-surface); }
+  ol.pasos { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+  ol.pasos li { background: var(--surface-low); border-radius: 12px; padding: 14px 16px; display: grid; grid-template-columns: 32px 1fr; gap: 4px 12px; align-items: start; }
+  ol.pasos li.hecho { background: var(--surface-c); opacity: .7; }
+  ol.pasos li.hecho .txt { text-decoration: line-through; text-decoration-color: var(--on-surface-variant); }
+  ol.pasos input[type=checkbox] { width: 22px; height: 22px; accent-color: var(--primary); margin: 2px 0 0; cursor: pointer; }
+  ol.pasos .txt { font-size: 1rem; }
+  ol.pasos .txt b { font-family: var(--mono); font-weight: 500; background: var(--primary-container); color: var(--on-primary-container); padding: 0 6px; border-radius: 6px; white-space: nowrap; }
+  ol.pasos .ref { grid-column: 2; font-size: .78rem; color: var(--primary); font-weight: 500; }
+  .reloj { grid-column: 2; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-top: 8px; background: var(--surface-highest); border-radius: 12px; padding: 10px 14px; }
+  .reloj .cifra { font-family: var(--mono); font-size: 2.2rem; font-weight: 500; font-variant-numeric: tabular-nums; min-width: 5ch; color: var(--primary); }
+  .reloj .cifra.fin { color: var(--ok); }
+  .reloj input { width: 70px; padding: 8px 10px; font-family: var(--mono); }
+
+  /* Compras */
+  .compras { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+  .compras li { background: var(--surface-low); border-radius: 12px; padding: 12px 16px; display: grid; grid-template-columns: 28px 1fr; gap: 2px 12px; align-items: start; }
+  .compras li.hecho { opacity: .55; }
+  .compras li.hecho .txt { text-decoration: line-through; }
+  .compras input[type=checkbox] { width: 22px; height: 22px; accent-color: var(--primary); margin: 2px 0 0; cursor: pointer; }
+  .compras .txt { font-weight: 500; cursor: pointer; }
+  .compras .nota { grid-column: 2; font-size: .85rem; color: var(--on-surface-variant); }
+  .anadir { display: flex; gap: 8px; flex-wrap: wrap; align-items: end; }
+  .anadir input { flex: 1 1 200px; width: auto; }
+
+  .snack { position: fixed; left: 16px; right: 16px; bottom: calc(16px + env(safe-area-inset-bottom, 0px)); z-index: 40; max-width: 560px; margin: 0 auto; background: var(--inverse-surface); color: var(--inverse-on-surface); padding: 14px 16px; border-radius: 4px; font-size: .875rem; box-shadow: var(--shadow-3); }
+
+  @media (max-width: 640px) {
+    body { padding-block: env(safe-area-inset-top, 0px) calc(96px + env(safe-area-inset-bottom, 0px)); }
+    .appbar .fila { min-height: 56px; padding: 6px 12px; }
+    .appbar .logo { width: 36px; height: 36px; }
+    .appbar h1 { font-size: 1.25rem; }
+    .contadores { display: none; }
+    nav.navegacion { position: fixed; top: auto; bottom: 0; left: 0; right: 0; margin: 0; z-index: 30; background: var(--surface-c); border-bottom: 0; padding: 8px 0 calc(8px + env(safe-area-inset-bottom, 0px)); box-shadow: 0 -1px 0 var(--outline-variant); }
+    nav.navegacion .fila { padding: 0 4px; }
+    .pestana { flex-direction: column; gap: 4px; min-height: 64px; padding: 0 2px; font-size: .75rem; }
+    .pestana::after { display: none; }
+    .pestana:hover { background: none; }
+    .pestana[aria-selected="true"] { color: var(--on-surface); }
+    .pestana[aria-selected="true"] .icono { background: var(--secondary-container); color: var(--on-secondary-container); }
+    .fab { bottom: calc(96px + env(safe-area-inset-bottom, 0px)); }
+    .snack { bottom: calc(92px + env(safe-area-inset-bottom, 0px)); }
+    #btn-nuevo { display: none; }
+    .btn { min-height: 44px; }
+    .btn.chico { min-height: 36px; }
+    .buscar { width: 100%; }
+    .acciones > div { width: 100%; }
+    .fila-dato { grid-template-columns: 1fr; gap: 2px; }
+    .tabla-pesar th, .tabla-pesar td { padding: 10px 8px; }
+    .tabla-pesar td.g { font-size: 1.1rem; }
+    .tabla-pesar input { width: 80px; }
+    .soltar { display: none; }
+    .fotos { grid-template-columns: repeat(3, 1fr); }
+    .previas img { width: 72px; height: 72px; }
+  }
+  @media (min-width: 641px) { .fab { display: none; } }
+  @media (prefers-reduced-motion: no-preference) {
+    .lote { animation: entra .3s ease both; }
+    @keyframes entra { from { transform: translateY(6px); opacity: .6; } to { transform: none; opacity: 1; } }
+  }
+</style>
+</head>
+<body>
+
+<header class="appbar" id="appbar">
+  <div class="fila">
+    <div class="logo" aria-hidden="true"><svg class="ic" viewBox="0 0 24 24"><path d="M13 11.33 18 18H6l5-6.67V6h2m2.96-2H8.04c-.42 0-.65.48-.39.81L9 6.5v4.17L3.2 18.4c-.49.66-.02 1.6.8 1.6h16c.82 0 1.29-.94.8-1.6L15 10.67V6.5l1.35-1.69c.26-.33.03-.81-.39-.81z"/></svg></div>
+    <div class="titulos">
+      <h1>Bitácora HOTLUB</h1>
+      <span class="sub"><span class="estado-red" id="estado-red"><span class="punto"></span><span id="estado-red-txt">Conectando…</span></span></span>
+    </div>
+    <div class="contadores" aria-live="polite">
+      <span class="contador"><b id="c-lotes">0</b> lotes</span>
+      <span class="contador"><b id="c-fotos">0</b> fotos</span>
+      <span class="contador"><b id="c-trucos">0</b> trucos ✓</span>
+    </div>
+    <button class="btn tonal chico" id="btn-instalar" hidden>Instalar</button>
+  </div>
+</header>
+
+<nav class="navegacion" aria-label="Secciones">
+  <div class="fila" role="tablist">
+    <button class="pestana" role="tab" id="t-lote" aria-selected="true" data-p="lote">
+      <span class="icono"><svg class="ic" viewBox="0 0 24 24"><path d="M13 11.33 18 18H6l5-6.67V6h2m2.96-2H8.04c-.42 0-.65.48-.39.81L9 6.5v4.17L3.2 18.4c-.49.66-.02 1.6.8 1.6h16c.82 0 1.29-.94.8-1.6L15 10.67V6.5l1.35-1.69c.26-.33.03-.81-.39-.81z"/></svg></span><span>Lote</span>
+    </button>
+    <button class="pestana" role="tab" id="t-diario" aria-selected="false" data-p="diario">
+      <span class="icono"><svg class="ic" viewBox="0 0 24 24"><path d="M21 5c-1.11-.35-2.33-.5-3.5-.5-1.95 0-4.05.4-5.5 1.5-1.45-1.1-3.55-1.5-5.5-1.5S2.45 4.9 1 6v14.65c0 .25.25.5.5.5.1 0 .15-.05.25-.05C3.1 20.45 5.05 20 6.5 20c1.95 0 4.05.4 5.5 1.5 1.35-.85 3.8-1.5 5.5-1.5 1.65 0 3.35.3 4.75 1.05.1.05.15.05.25.05.25 0 .5-.25.5-.5V6c-.6-.45-1.25-.75-2-1zm0 13.5c-1.1-.35-2.3-.5-3.5-.5-1.7 0-4.15.65-5.5 1.5V8c1.35-.85 3.8-1.5 5.5-1.5 1.2 0 2.4.15 3.5.5v11.5z"/></svg></span><span>Diario</span>
+    </button>
+    <button class="pestana" role="tab" id="t-compras" aria-selected="false" data-p="compras">
+      <span class="icono"><svg class="ic" viewBox="0 0 24 24"><path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49A1.003 1.003 0 0 0 20 4H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"/></svg></span><span>Compras</span>
+    </button>
+    <button class="pestana" role="tab" id="t-trucos" aria-selected="false" data-p="trucos">
+      <span class="icono"><svg class="ic" viewBox="0 0 24 24"><path d="M9 21c0 .55.45 1 1 1h4c.55 0 1-.45 1-1v-1H9v1zm3-19C8.14 2 5 5.14 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.86-3.14-7-7-7z"/></svg></span><span>Trucos</span>
+    </button>
+    <button class="pestana" role="tab" id="t-reglas" aria-selected="false" data-p="reglas">
+      <span class="icono"><svg class="ic" viewBox="0 0 24 24"><path d="m23 12-2.44-2.79.34-3.69-3.61-.82-1.89-3.2L12 2.96 8.6 1.5 6.71 4.69 3.1 5.5l.34 3.7L1 12l2.44 2.79-.34 3.7 3.61.82L8.6 22.5l3.4-1.47 3.4 1.46 1.89-3.19 3.61-.82-.34-3.69L23 12zm-12.91 4.72-3.8-3.81 1.48-1.48 2.32 2.33 5.85-5.87 1.48 1.48-7.33 7.35z"/></svg></span><span>Reglas</span>
+    </button>
+  </div>
+</nav>
+
+<main class="envoltura" style="padding-block: 20px 0;">
+  <p class="aviso" id="aviso-db" hidden></p>
+
+  <section class="hoy" id="hoy" hidden aria-live="polite">
+    <h2><svg class="ic" viewBox="0 0 24 24"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.89 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/></svg>Qué toca revisar</h2>
+    <ul id="hoy-lista"></ul>
+  </section>
+
+  <!-- HACER UN LOTE -->
+  <section id="p-lote" role="tabpanel" aria-labelledby="t-lote" style="display:grid;gap:18px;">
+    <div class="recetas" role="radiogroup" aria-label="Qué vas a hacer">
+      <label class="receta"><input type="radio" name="receta" value="base" id="r-base"><b>Base sola</b><span>Agua, HEC, glicerina y PG. La prueba n.º 9.</span></label>
+      <label class="receta"><input type="radio" name="receta" value="arg" id="r-arg" checked><b>Base + L-arginina</b><span>Arginina al 0,5 % con el cítrico dentro de su solución.</span></label>
+      <label class="receta"><input type="radio" name="receta" value="menta" id="r-menta"><b>Base + arginina + menta</b><span>Lo anterior más la solución madre de menta (1 gota / 5 kg).</span></label>
+      <label class="receta"><input type="radio" name="receta" value="anal" id="r-anal"><b>Anal: base + lidocaína</b><span>7,5 g de lidocaína base por cada 250 g, disuelta con cítrico en proporción exacta en el agua antes de la HEC (método Prueba María). Sin arginina.</span></label>
+    </div>
+    <div class="ajustes">
+      <div class="campo"><label for="c-total">Tamaño del lote (g)</label><input id="c-total" type="number" min="50" max="20000" step="1" value="252" inputmode="numeric"></div>
+      <div class="campo"><label for="c-agua">Agua</label><select id="c-agua"><option>Destilada</option><option>Desmineralizada</option><option>Grifo</option><option>Hervida</option><option>De mesa</option></select></div>
+      <div class="campo"><label for="c-quien">Quién lo hace</label><input id="c-quien" list="personas" placeholder="Kike"></div>
+      <button class="btn outl" type="button" id="c-reset">Empezar de nuevo</button>
+    </div>
+    <p class="alerta-agua" id="c-alerta-agua" hidden>Agua del grifo: con arginina y cítrico forma cristalitos con las horas (truco 10). Usa destilada.</p>
+    <div class="seccion">
+      <h2>Qué pesar</h2>
+      <div class="tabla-pesar"><table>
+        <thead><tr><th>Ingrediente</th><th class="g">Pesar (g)</th><th>Peso real</th></tr></thead>
+        <tbody id="c-tabla"></tbody>
+      </table></div>
+      <p class="ayuda" id="c-nota-cit" hidden>El cítrico de la tabla es solo la dosis de arranque: el total se decide con el pH-metro (paso «Mide el pH»). Con el saco actual, la cuenta teórica da un gel demasiado ácido.</p>
+    </div>
+    <div class="seccion">
+      <h2>Paso a paso</h2>
+      <ol class="pasos" id="c-pasos"></ol>
+    </div>
+    <div class="card alta">
+      <h2 style="font-size:1.2rem;">Guardar en la bitácora</h2>
+      <div class="campo"><label for="c-cambio">Qué cambió respecto al anterior (una sola cosa)</label><input id="c-cambio" placeholder="Ej.: agua destilada en vez de grifo"></div>
+      <p class="ayuda">Se guarda con los pesos reales que hayas apuntado. Después añade la foto y lo que ves con «Seguimiento» en el diario.</p>
+      <div class="pie-form"><button class="btn" type="button" id="c-guardar">Guardar este lote</button><span class="error" id="c-error" role="alert"></span></div>
+    </div>
+  </section>
+
+  <!-- COMPRAS -->
+  <section id="p-compras" role="tabpanel" aria-labelledby="t-compras" hidden style="display:grid;gap:14px;">
+    <form class="anadir" id="form-compra">
+      <input id="compra-txt" placeholder="Qué hay que comprar" aria-label="Qué hay que comprar" required>
+      <input id="compra-nota" placeholder="Detalle (opcional)" aria-label="Detalle">
+      <button class="btn" type="submit" id="compra-btn">Añadir</button>
+    </form>
+    <ul class="compras" id="compras"></ul>
+    <div class="pie-form"><button class="btn texto chico" type="button" id="compras-limpiar" hidden>Quitar lo ya comprado</button></div>
+  </section>
+
+  <!-- DIARIO -->
+  <section id="p-diario" role="tabpanel" aria-labelledby="t-diario" hidden style="display:grid;gap:16px;">
+    <div class="acciones">
+      <div class="filtros" id="filtros">
+        <button class="chipfiltro" aria-pressed="true" data-f="todos">Todos</button>
+        <button class="chipfiltro" aria-pressed="false" data-f="bien">Salió bien</button>
+        <button class="chipfiltro" aria-pressed="false" data-f="regular">Regular</button>
+        <button class="chipfiltro" aria-pressed="false" data-f="mal">Salió mal</button>
+        <button class="chipfiltro" aria-pressed="false" data-f="fotos">Con fotos</button>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <input class="buscar" id="buscar" type="search" placeholder="Buscar: HEC, menta, pH…" aria-label="Buscar en el diario">
+        <button class="btn icono" id="btn-nuevo"><svg class="ic" viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>Nuevo lote</button>
+      </div>
+    </div>
+
+    <form class="ficha" id="form-lote" hidden>
+      <h2>Apuntar un lote</h2>
+      <div class="campos">
+        <div class="campo"><label for="f-fecha">Fecha</label><input id="f-fecha" type="date" required></div>
+        <div class="campo"><label for="f-quien">Quién lo hizo</label><input id="f-quien" list="personas" placeholder="Kike"><datalist id="personas"><option value="Kike"><option value="Renzo"></datalist></div>
+        <div class="campo ancho"><label for="f-titulo">Qué se probó</label><input id="f-titulo" required placeholder="Ej.: Base n.º 9 + solución madre de menta"></div>
+        <div class="campo ancho"><label for="f-cambio">Qué cambió respecto al anterior (una sola cosa)</label><input id="f-cambio" placeholder="Ej.: Añadí 1,00 g de solución madre de menta al final, en frío"></div>
+        <div class="campo ancho"><label for="f-pesos">Pesos reales</label><textarea id="f-pesos" class="mono" placeholder="agua 236,00 · HEC 3,50 · glicerina 8,75 · PG 3,75"></textarea></div>
+        <div class="campo"><label for="f-agua">Agua usada</label>
+          <select id="f-agua"><option value="">Sin apuntar</option><option>Grifo</option><option>Hervida</option><option>De mesa</option><option>Destilada</option><option>Desmineralizada</option></select></div>
+        <div class="campo"><label for="f-ph">pH medido</label><input id="f-ph" type="number" step="0.1" min="0" max="14" inputmode="decimal" placeholder="Vacío si no se midió">
+          <span class="ayuda">Si no se midió, déjalo vacío. No se adivina.</span></div>
+        <div class="campo ancho" id="f-tira-wrap" hidden></div>
+        <div class="campo ancho"><label for="f-resultado">Qué pasó</label><textarea id="f-resultado" placeholder="Transparencia, espesor, grumos, olor… al momento y a las 24 h"></textarea></div>
+        <div class="campo ancho"><span class="lbl">¿Cómo salió?</span>
+          <div class="estados" role="radiogroup">
+            <label><input type="radio" name="estado" value="bien" id="e-bien"> Salió bien</label>
+            <label><input type="radio" name="estado" value="regular" id="e-regular"> Regular</label>
+            <label><input type="radio" name="estado" value="mal" id="e-mal"> Salió mal</label>
+            <label><input type="radio" name="estado" value="dato" id="e-dato" checked> Solo es un dato</label>
+          </div></div>
+        <div class="campo ancho"><label for="f-leccion">Lección</label><input id="f-leccion" placeholder="Lo que tiene que saber el próximo que haga esto"></div>
+        <div class="campo ancho" id="zona-fotos"><span class="lbl">Fotos de la muestra</span>
+          <div class="fotobtns">
+            <label class="btn tonal icono" for="f-camara"><svg class="ic" viewBox="0 0 24 24"><path d="M12 15.2a3.2 3.2 0 1 0 0-6.4 3.2 3.2 0 0 0 0 6.4zM9 2 7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9zm3 15c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"/></svg>Tomar foto</label>
+            <input id="f-camara" type="file" accept="image/*" capture="environment" hidden>
+            <label class="btn tonal icono" for="f-fotos"><svg class="ic" viewBox="0 0 24 24"><path d="M22 16V4c0-1.1-.9-2-2-2H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2zm-11-4 2.03 2.71L16 11l4 5H8l3-4zM2 6v14c0 1.1.9 2 2 2h14v-2H4V6H2z"/></svg>Galería</label>
+            <input id="f-fotos" type="file" accept="image/*" multiple hidden>
+          </div>
+          <div class="soltar" id="soltar">O arrastra las fotos aquí</div>
+          <div class="previas" id="previas"></div></div>
+      </div>
+      <div class="pie-form">
+        <button class="btn" type="submit" id="f-guardar">Guardar en la bitácora</button>
+        <button class="btn texto" type="button" id="f-cancelar">Cancelar</button>
+        <span class="error" id="f-error" role="alert"></span>
+      </div>
+    </form>
+
+    <div class="diario" id="diario"></div>
+  </section>
+
+  <!-- TRUCOS -->
+  <section id="p-trucos" role="tabpanel" aria-labelledby="t-trucos" hidden style="display:grid;gap:16px;">
+    <div class="acciones">
+      <p class="ayuda">✅ Comprobado en la mesa · 🧪 Por probar · ⚠️ Cuidado</p>
+      <button class="btn tonal chico" id="btn-truco">Añadir truco</button>
+    </div>
+    <form class="ficha" id="form-truco" hidden>
+      <h2>Nuevo truco</h2>
+      <div class="campos">
+        <div class="campo ancho"><label for="tr-titulo">Nombre del truco</label><input id="tr-titulo" required></div>
+        <div class="campo ancho"><label for="tr-que">Qué hacer</label><textarea id="tr-que" required></textarea></div>
+        <div class="campo ancho"><label for="tr-porque">Por qué</label><textarea id="tr-porque"></textarea></div>
+        <div class="campo ancho"><label for="tr-como">Cómo lo aprendimos</label><input id="tr-como" placeholder="Fecha y qué pasó"></div>
+        <div class="campo"><label for="tr-estado">Estado</label><select id="tr-estado"><option value="probar">🧪 Por probar</option><option value="ok">✅ Comprobado</option><option value="cuidado">⚠️ Cuidado</option></select></div>
+      </div>
+      <div class="pie-form">
+        <button class="btn" type="submit">Guardar truco</button>
+        <button class="btn texto" type="button" id="tr-cancelar">Cancelar</button>
+        <span class="error" id="tr-error" role="alert"></span>
+      </div>
+    </form>
+    <div class="trucos" id="trucos"></div>
+  </section>
+
+  <!-- REGLAS -->
+  <section id="p-reglas" role="tabpanel" aria-labelledby="t-reglas" hidden style="display:grid;gap:16px;">
+    <ol class="reglas" id="reglas"></ol>
+  </section>
+</main>
+
+<button class="fab" id="fab-nuevo" type="button" hidden><svg class="ic" viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>Nuevo lote</button>
+<div class="visor" id="visor" hidden><img id="visor-img" alt=""></div>
+<div class="snack" id="toast" role="status" hidden></div>
+
+<script>
+(function () {
+  // --- Firebase (base de datos de HOTLUB) ---------------------------------
+  const firebaseConfig = {
+    apiKey: "AIzaSyDzVC4S6O0pUIQA2DM_ObtfY94z_iQT9eI",
+    authDomain: "bitacora-hotlub-6d18b.firebaseapp.com",
+    projectId: "bitacora-hotlub-6d18b",
+    storageBucket: "bitacora-hotlub-6d18b.firebasestorage.app",
+    messagingSenderId: "181370928630",
+    appId: "1:181370928630:web:5f31efba4ee2956e4edbd7"
+  };
+  let db = null;
+  try {
+    firebase.initializeApp(firebaseConfig);
+    db = firebase.firestore();
+    db.enablePersistence({ synchronizeTabs: true }).catch(() => {});
+  } catch (e) { db = null; }
+
+  // Service worker: la app abre aunque no haya señal
+  if ("serviceWorker" in navigator) { navigator.serviceWorker.register("./sw.js").catch(() => {}); }
+
+  // Botón "Instalar" cuando el celular lo permite
+  let promptInstalar = null;
+  window.addEventListener("beforeinstallprompt", (e) => { e.preventDefault(); promptInstalar = e; document.getElementById("btn-instalar").hidden = false; });
+  document.getElementById("btn-instalar").addEventListener("click", async () => {
+    if (!promptInstalar) return; promptInstalar.prompt(); await promptInstalar.userChoice; promptInstalar = null; document.getElementById("btn-instalar").hidden = true;
+  });
+
+  const $ = (s) => document.querySelector(s);
+  const MESES = ["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"];
+  const ESTADOS = { bien: "Salió bien", regular: "Regular", mal: "Salió mal", dato: "Dato" };
+  const TRUCO_EST = { ok: "✅ Comprobado", probar: "🧪 Por probar", cuidado: "⚠️ Cuidado" };
+  const ICONOS = {
+    camara: "M12 15.2a3.2 3.2 0 1 0 0-6.4 3.2 3.2 0 0 0 0 6.4zM9 2 7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9zm3 15c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z",
+    galeria: "M22 16V4c0-1.1-.9-2-2-2H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2zm-11-4 2.03 2.71L16 11l4 5H8l3-4zM2 6v14c0 1.1.9 2 2 2h14v-2H4V6H2z",
+    mas: "M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z",
+    reloj: "M15 1H9v2h6V1zm-4 13h2V8h-2v6zm8.03-6.61 1.42-1.42c-.43-.51-.9-.99-1.41-1.41l-1.42 1.42A8.962 8.962 0 0 0 12 4c-4.97 0-9 4.03-9 9s4.02 9 9 9a8.994 8.994 0 0 0 7.03-14.61zM12 20c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7z"
+  };
+  function icono(n) {
+    const s = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    s.setAttribute("viewBox", "0 0 24 24"); s.setAttribute("class", "ic"); s.setAttribute("aria-hidden", "true");
+    const p = document.createElementNS("http://www.w3.org/2000/svg", "path"); p.setAttribute("d", ICONOS[n]); s.append(p);
+    return s;
+  }
+
+  const st = { lotes: [], trucos: [], reglas: [], compras: [], filtro: "todos", q: "", abiertoSeg: null, segTipo: null };
+  const PANELES = ["lote", "diario", "compras", "trucos", "reglas"];
+  function avisar(txt) {
+    const t = $("#toast"); t.textContent = txt; t.hidden = false;
+    clearTimeout(avisar._t); avisar._t = setTimeout(() => { t.hidden = true; }, 3200);
+  }
+
+  // Estado de conexión
+  function pintaRed() {
+    const on = navigator.onLine;
+    $("#estado-red").classList.toggle("off", !on);
+    $("#estado-red-txt").textContent = on ? "Cuaderno de mesa · en línea" : "Sin conexión: se guarda al volver la señal";
+  }
+  window.addEventListener("online", pintaRed); window.addEventListener("offline", pintaRed); pintaRed();
+
+  const appbar = $("#appbar");
+  window.addEventListener("scroll", () => appbar.classList.toggle("elevada", window.scrollY > 4), { passive: true });
+
+  // --- utilidades -------------------------------------------------------
+  function h(tag, attrs, ...kids) {
+    const el = document.createElement(tag);
+    for (const [k, v] of Object.entries(attrs || {})) {
+      if (v == null || v === false) continue;
+      if (k === "class") el.className = v;
+      else if (k.startsWith("on")) el.addEventListener(k.slice(2), v);
+      else el.setAttribute(k, v === true ? "" : v);
+    }
+    for (const k of kids.flat()) if (k != null && k !== false) el.append(k instanceof Node ? k : document.createTextNode(String(k)));
+    return el;
+  }
+  function fmtFecha(s) {
+    if (!s || !/^\d{4}-\d{2}-\d{2}/.test(s)) return s || "";
+    const [y, m, d] = s.slice(0, 10).split("-").map(Number);
+    return d + " " + MESES[m - 1] + " " + y;
+  }
+  function hoy() {
+    const d = new Date(), z = (n) => String(n).padStart(2, "0");
+    return d.getFullYear() + "-" + z(d.getMonth() + 1) + "-" + z(d.getDate());
+  }
+
+  function tira(ph) {
+    const pos = (v) => Math.max(0, Math.min(100, (v - 3) / 5 * 100));
+    const barra = h("div", { class: "barra", role: "img", "aria-label": "pH " + ph },
+      h("span", { class: "banda", style: `left:${pos(3.8)}%;width:${pos(4.5) - pos(3.8)}%`, title: "Vaginal 3,8–4,5" }),
+      h("span", { class: "banda", style: `left:${pos(5.5)}%;width:${pos(7) - pos(5.5)}%`, title: "Anal 5,5–7" }),
+      h("span", { class: "marca", style: `left:${pos(ph)}%` }));
+    return h("div", { class: "tira" }, barra,
+      h("div", { class: "escala" }, ...[3,4,5,6,7,8].map((n) => h("span", {}, n))),
+      h("span", { class: "leyenda" }, "pH " + String(ph).replace(".", ",") + " · recuadros: vaginal 3,8–4,5 y anal 5,5–7"));
+  }
+
+  // --- fotos: se guardan comprimidas dentro de la base de datos ----------
+  const cacheFotos = new Map();
+  async function comprimir(file, max, calidad) {
+    const url = URL.createObjectURL(file);
+    const img = await new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = url; });
+    const w = img.naturalWidth, hh = img.naturalHeight, s = Math.min(1, max / Math.max(w, hh));
+    const c = document.createElement("canvas"); c.width = Math.round(w * s); c.height = Math.round(hh * s);
+    c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+    URL.revokeObjectURL(url);
+    return c.toDataURL("image/jpeg", calidad);
+  }
+  async function subir(file) {
+    if (!file.type.startsWith("image/")) throw { code: "formato" };
+    let data = await comprimir(file, 1280, 0.8);
+    if (data.length > 900000) data = await comprimir(file, 1000, 0.65);
+    if (data.length > 900000) data = await comprimir(file, 800, 0.55);
+    const ref = await db.collection("fotos").add({ data, creado: new Date().toISOString() });
+    cacheFotos.set(ref.id, data);
+    return ref.id;
+  }
+  async function fotoURL(id) {
+    if (cacheFotos.has(id)) return cacheFotos.get(id);
+    try {
+      const d = await db.doc("fotos/" + id).get();
+      const data = d.exists ? d.data().data : null;
+      cacheFotos.set(id, data);
+      return data;
+    } catch (_) { return null; }
+  }
+  function mensajeError(ex) {
+    const c = ex && ex.code;
+    if (c === "formato") return "Ese archivo no es una foto. Usa JPG o PNG.";
+    if (c === "permission-denied") return "La base de datos no deja guardar. Hay que revisar las reglas en Firebase (avísale a Claude).";
+    if (c === "resource-exhausted") return "Se llenó el espacio gratuito. Avísale a Claude.";
+    if (c === "unavailable") return "Sin conexión. Se guardará solo cuando vuelva la señal.";
+    return "No se pudo guardar. Revisa la conexión y vuelve a intentarlo.";
+  }
+
+  // Selector de fotos: cámara del celular o galería
+  function selectorFotos(idBase) {
+    const elegidos = [];
+    const previas = h("div", { class: "previas" });
+    const alElegir = (e) => {
+      for (const f of e.target.files) {
+        if (!f.type.startsWith("image/")) continue;
+        elegidos.push(f);
+        previas.append(h("img", { src: URL.createObjectURL(f), alt: f.name }));
+      }
+      e.target.value = "";
+    };
+    const cam = h("input", { id: idBase + "-cam", type: "file", accept: "image/*", capture: "environment", hidden: true, onchange: alElegir });
+    const gal = h("input", { id: idBase + "-gal", type: "file", accept: "image/*", multiple: true, hidden: true, onchange: alElegir });
+    const bloque = h("div", { style: "display:grid;gap:8px" },
+      h("div", { class: "fotobtns" },
+        h("label", { class: "btn tonal chico icono", for: cam.id }, icono("camara"), "Tomar foto"), cam,
+        h("label", { class: "btn tonal chico icono", for: gal.id }, icono("galeria"), "Galería"), gal),
+      previas);
+    return { bloque, elegidos };
+  }
+
+  // --- pestañas ---------------------------------------------------------
+  function irA(p) {
+    for (const b of document.querySelectorAll(".pestana")) b.setAttribute("aria-selected", String(b.dataset.p === p));
+    for (const s of PANELES) $("#p-" + s).hidden = s !== p;
+    $("#fab-nuevo").hidden = p !== "diario";
+    window.scrollTo({ top: 0 });
+  }
+  for (const b of document.querySelectorAll(".pestana")) b.addEventListener("click", () => irA(b.dataset.p));
+  const hash = (location.hash || "").slice(1);
+  if (PANELES.includes(hash)) irA(hash);
+
+  // --- visor de fotos ---------------------------------------------------
+  const visor = $("#visor");
+  function verFoto(src) { $("#visor-img").src = src; visor.hidden = false; }
+  visor.addEventListener("click", () => { visor.hidden = true; });
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape") visor.hidden = true; });
+
+  // --- render -----------------------------------------------------------
+  const fotosDeSeg = (s) => [...(s.foto ? [s.foto] : []), ...(s.fotos || [])];
+  function contadores() {
+    $("#c-lotes").textContent = st.lotes.length;
+    let f = 0; for (const l of st.lotes) { f += (l.fotos || []).length; for (const s of l.seguimiento || []) f += fotosDeSeg(s).length; }
+    $("#c-fotos").textContent = f;
+    $("#c-trucos").textContent = st.trucos.filter((t) => t.estado === "ok").length;
+  }
+  function coincide(l) {
+    if (st.filtro === "fotos") { if (!(l.fotos || []).length && !(l.seguimiento || []).some((s) => fotosDeSeg(s).length)) return false; }
+    else if (st.filtro !== "todos" && l.estado !== st.filtro) return false;
+    if (!st.q) return true;
+    const txt = [l.titulo, l.cambio, l.pesos, l.resultado, l.leccion, l.quien, l.agua, ...(l.seguimiento || []).map((s) => s.texto)].join(" ").toLowerCase();
+    return txt.includes(st.q);
+  }
+  function renderDiario() {
+    const cont = $("#diario");
+    cont.replaceChildren();
+    const lista = st.lotes.filter(coincide);
+    if (!lista.length) {
+      cont.append(h("p", { class: "vacio" }, st.lotes.length ? "Ningún lote coincide con el filtro." : "Todavía no hay lotes apuntados."));
+      return;
+    }
+    for (const l of lista) cont.append(tarjetaLote(l));
+  }
+  function galeria(ids, titulo) {
+    return h("div", { class: "fotos" }, ids.map((id, i) => {
+      const img = h("img", { alt: "Foto " + (i + 1) + " de " + titulo, loading: "lazy" });
+      const b = h("button", { type: "button", "aria-label": "Ver foto " + (i + 1), onclick: () => { if (img.src) verFoto(img.src); } }, img);
+      fotoURL(id).then((src) => { if (src) img.src = src; else b.hidden = true; });
+      return b;
+    }));
+  }
+  function tarjetaLote(l) {
+    const est = ESTADOS[l.estado] ? l.estado : "dato";
+    const filas = [];
+    const fila = (k, v, mono) => v ? filas.push(h("div", { class: "fila-dato" }, h("dt", {}, k), h("dd", { class: mono ? "mono" : null }, v))) : null;
+    fila("Qué cambió", l.cambio);
+    fila("Pesos", l.pesos, true);
+    fila("Agua", l.agua);
+    fila("Qué pasó", l.resultado);
+    const fotos = (l.fotos || []);
+    const card = h("article", { class: "lote", "data-estado": est, id: "lote-" + l.id },
+      h("div", { class: "cab" },
+        h("h3", {}, l.titulo || "Lote sin nombre"),
+        h("span", { class: "chip " + est }, ESTADOS[est])),
+      h("span", { class: "fecha" }, fmtFecha(l.fecha) + (l.quien ? " · " + l.quien : "")),
+      filas.length ? h("dl", { class: "filas" }, filas) : null,
+      typeof l.ph === "number" ? tira(l.ph) : null,
+      l.leccion ? h("div", { class: "leccion" }, h("span", { class: "lbl" }, "Lección"), h("span", {}, l.leccion)) : null,
+      fotos.length ? galeria(fotos, l.titulo || "lote") : null);
+    const segs = l.seguimiento || [];
+    if (segs.length) {
+      card.append(h("div", { class: "seguimiento" }, segs.map((s) => {
+        const sf = fotosDeSeg(s);
+        return h("div", { class: "nota" },
+          h("span", { class: "fecha" }, "Seguimiento · " + fmtFecha(s.fecha)),
+          s.texto ? h("span", {}, s.texto) : null,
+          sf.length ? galeria(sf, "seguimiento") : null);
+      })));
+    }
+    if (db) {
+      if (st.abiertoSeg === l.id) card.append(formSeguimiento(l));
+      else card.append(h("div", { class: "pie-lote" },
+        h("button", { class: "btn tonal chico icono", type: "button", onclick: () => { st.abiertoSeg = l.id; renderDiario(); } }, icono("mas"), "Seguimiento (24 h, 7 días…)")));
+    }
+    return card;
+  }
+  function formSeguimiento(l) {
+    const txt = h("textarea", { id: "seg-txt-" + l.id, placeholder: "Ej.: A las 24 h sigue transparente, sin grumos, olor a menta suave", "aria-label": "Nota de seguimiento" });
+    const sel = selectorFotos("seg-" + l.id);
+    const err = h("span", { class: "error", role: "alert" });
+    const guardar = h("button", { class: "btn chico", type: "submit" }, "Guardar seguimiento");
+    const f = h("form", { class: "seg" }, txt, sel.bloque,
+      h("div", { class: "pie-form" }, guardar,
+        h("button", { class: "btn texto chico", type: "button", onclick: () => { st.abiertoSeg = null; st.segTipo = null; renderDiario(); } }, "Cancelar"), err));
+    if (st.segTipo) txt.placeholder = "Revisión de las " + (st.segTipo === "h24" ? "24 horas" : "7 días") + ": transparencia, espesor, grumos, puntitos, olor…";
+    f.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const archivos = sel.elegidos;
+      if (!txt.value.trim() && !archivos.length) { err.textContent = "Escribe algo o añade una foto."; return; }
+      guardar.disabled = true; err.textContent = "";
+      try {
+        const ids = [];
+        for (let i = 0; i < archivos.length; i++) { guardar.textContent = "Subiendo foto " + (i + 1) + " de " + archivos.length + "…"; ids.push(await subir(archivos[i])); }
+        const actual = st.lotes.find((x) => x.id === l.id) || l;
+        const nueva = { fecha: hoy(), texto: txt.value.trim() };
+        if (ids.length) nueva.fotos = ids;
+        const cambio = { seguimiento: [...(actual.seguimiento || []), nueva] };
+        if (st.segTipo && actual.revisiones) cambio["revisiones." + st.segTipo] = true;
+        await db.doc("lotes/" + l.id).update(cambio);
+        st.abiertoSeg = null; st.segTipo = null; renderDiario();
+        avisar("Seguimiento guardado");
+      } catch (ex) {
+        err.textContent = mensajeError(ex); guardar.disabled = false; guardar.textContent = "Guardar seguimiento";
+      }
+    });
+    return f;
+  }
+  function renderTrucos() {
+    const c = $("#trucos"); c.replaceChildren();
+    if (!st.trucos.length) { c.append(h("p", { class: "vacio" }, "Aún no hay trucos.")); return; }
+    for (const t of st.trucos) {
+      c.append(h("article", { class: "truco" },
+        h("div", { class: "top" }, h("span", { class: "num" }, "Truco " + (t.n ?? "")), h("span", { class: "chip " + (t.estado || "probar") }, TRUCO_EST[t.estado] || TRUCO_EST.probar)),
+        h("h3", {}, t.titulo || ""),
+        t.que ? h("p", { class: "que" }, t.que) : null,
+        t.porque ? h("p", { class: "porque" }, t.porque) : null,
+        t.como ? h("p", { class: "como" }, t.como) : null));
+    }
+  }
+  function renderReglas() {
+    const c = $("#reglas"); c.replaceChildren();
+    for (const r of st.reglas) c.append(h("li", {}, h("b", {}, r.texto || ""), r.detalle ? h("span", {}, r.detalle) : null));
+  }
+
+  // --- qué toca revisar -------------------------------------------------
+  const HORA = 3600e3;
+  function renderHoy() {
+    const panel = $("#hoy"), ul = $("#hoy-lista");
+    const ahora = Date.now(), items = [];
+    for (const l of st.lotes) {
+      if (!l.revisiones || !l.creado) continue;
+      const t0 = Date.parse(l.creado); if (isNaN(t0)) continue;
+      for (const [k, dt, nombre] of [["h24", 24 * HORA, "a las 24 h"], ["d7", 7 * 24 * HORA, "a los 7 días"]]) {
+        if (l.revisiones[k]) continue;
+        const vence = t0 + dt, falta = vence - ahora;
+        if (falta > 12 * HORA) continue;
+        items.push({ l, k, nombre, falta });
+      }
+    }
+    items.sort((a, b) => a.falta - b.falta);
+    panel.hidden = !items.length;
+    ul.replaceChildren(...items.map(({ l, k, nombre, falta }) => {
+      const tarde = falta <= 0, hrs = Math.round(Math.abs(falta) / HORA);
+      const cuando = tarde ? (hrs < 1 ? "toca ahora" : "toca desde hace " + hrs + " h") : "en " + Math.max(1, hrs) + " h";
+      return h("li", {},
+        h("span", {}, h("b", {}, l.titulo || "Lote"), " · revisión " + nombre),
+        h("span", { style: "display:flex;gap:10px;align-items:center;flex-wrap:wrap" },
+          h("span", { class: "cuando" + (tarde ? " tarde" : "") }, cuando),
+          h("button", { class: "btn chico", type: "button", onclick: () => {
+            st.abiertoSeg = l.id; st.segTipo = k; st.filtro = "todos"; st.q = ""; $("#buscar").value = "";
+            for (const x of document.querySelectorAll(".chipfiltro")) x.setAttribute("aria-pressed", String(x.dataset.f === "todos"));
+            irA("diario"); renderDiario();
+            const el = document.getElementById("lote-" + l.id); if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+          } }, "Anotar revisión")));
+    }));
+  }
+  setInterval(renderHoy, 5 * 60e3);
+
+  // --- compras ----------------------------------------------------------
+  function renderCompras() {
+    const ul = $("#compras");
+    const lista = [...st.compras].sort((a, b) => (a.hecho === b.hecho ? (a.creado || "").localeCompare(b.creado || "") : a.hecho ? 1 : -1));
+    if (!lista.length) { ul.replaceChildren(h("li", { class: "vacio", style: "display:block" }, "No hay nada pendiente de comprar.")); }
+    else ul.replaceChildren(...lista.map((c) => {
+      const cb = h("input", { type: "checkbox", id: "compra-" + c.id, "aria-label": "Comprado: " + (c.texto || "") });
+      cb.checked = !!c.hecho; cb.disabled = !db;
+      cb.addEventListener("change", async () => {
+        try { await db.doc("compras/" + c.id).update({ hecho: cb.checked }); }
+        catch (ex) { cb.checked = !cb.checked; avisar(mensajeError(ex)); }
+      });
+      return h("li", { class: c.hecho ? "hecho" : "" }, cb,
+        h("label", { class: "txt", for: "compra-" + c.id }, c.texto || ""),
+        c.nota ? h("span", { class: "nota" }, c.nota) : null);
+    }));
+    $("#compras-limpiar").hidden = !db || !st.compras.some((c) => c.hecho);
+  }
+  $("#form-compra").addEventListener("submit", async (e) => {
+    e.preventDefault(); if (!db) return;
+    const texto = $("#compra-txt").value.trim(); if (!texto) return;
+    try {
+      await db.collection("compras").doc().set({ texto, nota: $("#compra-nota").value.trim(), hecho: false, creado: new Date().toISOString() });
+      $("#compra-txt").value = ""; $("#compra-nota").value = ""; $("#compra-txt").focus();
+    } catch (ex) { avisar(mensajeError(ex)); }
+  });
+  const btnLimpiar = $("#compras-limpiar");
+  btnLimpiar.addEventListener("click", async () => {
+    if (btnLimpiar.dataset.confirmar !== "1") {
+      btnLimpiar.dataset.confirmar = "1"; btnLimpiar.textContent = "¿Seguro? Pulsa otra vez para quitarlos";
+      setTimeout(() => { btnLimpiar.dataset.confirmar = ""; btnLimpiar.textContent = "Quitar lo ya comprado"; }, 4000);
+      return;
+    }
+    btnLimpiar.dataset.confirmar = ""; btnLimpiar.textContent = "Quitar lo ya comprado";
+    for (const c of st.compras.filter((x) => x.hecho)) { try { await db.doc("compras/" + c.id).delete(); } catch (_) {} }
+  });
+
+  function renderTodo() { contadores(); renderDiario(); renderTrucos(); renderReglas(); renderHoy(); renderCompras(); }
+  renderTodo();
+
+  // --- hacer un lote: calculadora y paso a paso --------------------------
+  // Proporciones de la base n.º 9 (252 g) y de los añadidos, en fracción del lote.
+  // Cítrico para la arginina: dosis INICIAL baja (0,40 g por g); se completa con el pH-metro.
+  // Lidocaína: 7,5 g por 250 g; cítrico 0,41 g por g (1 citrato por 2 lidocaínas → pH ≈ 5,6 teórico).
+  const P = { hec: 3.5 / 252, gli: 8.75 / 252, pg: 3.75 / 252, reserva: 20 / 252, arg: 0.005, cit: 0.005 * 0.40, menta: 0.004, lido: 7.5 / 250, citL: (7.5 / 250) * 0.41 };
+  const RECETAS = { base: "Base sola", arg: "Base + L-arginina", menta: "Base + arginina + menta", anal: "Anal: base + lidocaína" };
+  const NOMBRES = {
+    lido: "Lidocaína base", citL: "Ácido cítrico para la lidocaína (inicial)",
+    agua: "Agua (vaso principal)", reserva: "Agua (para disolver el activo)", arg: "L-arginina",
+    cit: "Ácido cítrico (dosis inicial)", hec: "HEC (Cellosize QP100)", gli: "Glicerina", pg: "Propilenglicol (para la papilla)", menta: "Solución madre de menta"
+  };
+  const ORDEN = ["agua", "lido", "citL", "reserva", "arg", "cit", "hec", "gli", "pg", "menta"];
+  const fmt = (n) => n.toFixed(2).replace(".", ",");
+  const num = (s) => { const v = parseFloat(String(s || "").replace(",", ".")); return isNaN(v) ? null : v; };
+
+  let calc = { rid: "arg", total: 252, agua: "Destilada", quien: "", cambio: "", checks: {}, reales: {} };
+  try { const g = JSON.parse(localStorage.getItem("bitacora-calc") || "null"); if (g && RECETAS[g.rid]) calc = Object.assign(calc, g); } catch (_) {}
+  const guardarCalc = () => { try { localStorage.setItem("bitacora-calc", JSON.stringify(calc)); } catch (_) {} };
+
+  function calcular(rid, T) {
+    const conArg = rid === "arg" || rid === "menta", conMenta = rid === "menta", conLido = rid === "anal";
+    const r = { hec: T * P.hec, gli: T * P.gli, arg: conArg ? T * P.arg : 0, cit: conArg ? T * P.cit : 0, menta: conMenta ? T * P.menta : 0,
+      lido: conLido ? T * P.lido : 0, citL: conLido ? T * P.citL : 0 };
+    const pgTotal = T * P.pg;
+    r.pg = pgTotal - r.menta;
+    const agua = T - (r.hec + r.gli + pgTotal + r.arg + r.cit + r.lido + r.citL);
+    r.reserva = conArg ? T * P.reserva : 0;
+    r.agua = agua - r.reserva;
+    return r;
+  }
+  function pasos(rid, r) {
+    const g = (k) => fmt(r[k]) + " g";
+    const L = [];
+    if (rid === "menta") L.push({ id: "m0", t: ["¿Tienes la solución madre de menta? Si no: ", "1 gota", " de menta en ", "20,00 g", " de PG, en frasco ámbar. Agita hasta que quede transparente. Si sale turbia, no la uses."], ref: "Truco 6" });
+    if (rid === "anal") {
+      L.push({ id: "l0", t: ["Ponte guantes. Pesa ", g("agua"), " de agua en el vaso principal (nada de grifo). Puedes entibiarla, sin pasar de ", "~50 °C", ": ayuda a disolver más rápido."], ref: "Truco 10" });
+      L.push({ id: "l1", t: ["Echa ", g("lido"), " de lidocaína base al agua y remueve. No se disuelve todavía: es normal."] });
+      L.push({ id: "l2", t: ["Añade ", g("citL"), " de ácido cítrico, PESADO EXACTO, y remueve hasta que se disuelva (unos minutos). Esa proporción deja el pH solo en ~5,6. No añadas más salvo que quede polvo después de enfriar."], ref: "Truco 11: proporción exacta" });
+      L.push({ id: "l3", t: ["Mide el pH del agua. Objetivo ", "5,5–6,5", ". Si está por debajo, te pasaste de cítrico: anótalo y sigue, sin corregir."], ref: "pH-metro calibrado" });
+      L.push({ id: "b2", t: ["Haz la papilla: ", g("hec"), " de HEC + ", g("gli"), " de glicerina + ", g("pg"), " de PG. Mezcla hasta que no quede polvo seco."] });
+      L.push({ id: "b3", t: ["Vierte la papilla despacio sobre el agua con lidocaína, removiendo sin hacer remolino."], ref: "Trucos 1 y 7" });
+      L.push({ id: "b4", t: ["Bate igual que siempre. En agua algo ácida tarda un poco más: espera ", "~10 minutos", " a que espese."], ref: "Prueba María", reloj: true });
+      L.push({ id: "l4", t: ["Mide el pH del gel terminado y apúntalo en el lote."] });
+      L.push({ id: "l5", t: ["Separa ", "20 g", " en un frasco a la nevera: es donde antes aparecerían los cristales."] });
+      L.push({ id: "f1", t: ["Tapa y etiqueta: «LAB · NO USAR · LIDOCAÍNA · fecha». No se prueba en piel ni en mucosa."], ref: "Regla 6" });
+      L.push({ id: "f2", t: ["Foto contra fondo oscuro. Guarda el lote aquí abajo y revisa cristales a 24 h, 72 h y 7 días."] });
+      return L;
+    }
+    if (rid !== "base") {
+      L.push({ id: "s1", t: ["Prepara la solución: disuelve ", g("arg"), " de L-arginina y ", g("cit"), " de ácido cítrico en ", g("reserva"), " de agua. Remueve hasta que se disuelva."], ref: "Trucos 2 y 5" });
+      L.push({ id: "s1b", t: ["Mide el pH de la solución. Si está por encima de ", "4,5", ", añade cítrico de ", "0,05 g", " en 0,05 g, midiendo cada vez, hasta ", "4,3–4,5", ". Apunta el cítrico total en «Peso real». Si baja de 3,8, te pasaste: anótalo."], ref: "Truco 4 · con pH-metro calibrado" });
+      L.push({ id: "s2", t: ["Déjala reposar mientras haces la base. Al usarla, vierte solo la parte transparente de arriba (el saco actual deja polvo)."], ref: "Truco 3" });
+    }
+    L.push({ id: "b1", t: ["Pesa ", g("agua"), " de agua en el vaso principal."], ref: "Truco 10: agua destilada" });
+    L.push({ id: "b2", t: ["Haz la papilla: ", g("hec"), " de HEC + ", g("gli"), " de glicerina + ", g("pg"), " de PG. Mezcla hasta que no quede polvo seco."] });
+    L.push({ id: "b3", t: ["Vierte la papilla despacio sobre el agua, removiendo sin hacer remolino."], ref: "Trucos 1 y 7" });
+    L.push({ id: "b4", t: ["Bate siempre igual hasta que quede uniforme y sin grumos. Usa el reloj para que todos los lotes lleven el mismo tiempo."], ref: "Truco 9", reloj: true });
+    if (rid !== "base") L.push({ id: "a1", t: ["Añade la solución de arginina poco a poco, removiendo despacio."], ref: "Truco 2" });
+    if (rid === "menta") L.push({ id: "m1", t: ["Con el gel ya frío, añade ", g("menta"), " de solución madre de menta y remueve despacio 2–3 minutos."], ref: "Truco 6" });
+    L.push({ id: "f1", t: ["Tapa el vaso y etiquétalo: «LAB · NO USAR · fecha»."], ref: "Regla 6" });
+    L.push({ id: "f2", t: ["Haz una foto contra fondo oscuro. Guarda el lote aquí abajo y súbela como seguimiento."] });
+    return L;
+  }
+
+  // Reloj de batido: mantiene la pantalla encendida y vibra al terminar
+  const reloj = { min: 15, restante: 15 * 60, activo: false, id: null, ctx: null, wake: null };
+  async function pantallaEncendida(on) {
+    try {
+      if (on && !reloj.wake && navigator.wakeLock) reloj.wake = await navigator.wakeLock.request("screen");
+      if (!on && reloj.wake) { await reloj.wake.release(); reloj.wake = null; }
+    } catch (_) { reloj.wake = null; }
+  }
+  function pitido() {
+    try {
+      const c = reloj.ctx; if (!c) return;
+      [0, .35, .7].forEach((d) => { const o = c.createOscillator(), gn = c.createGain(); o.frequency.value = 880; gn.gain.value = .15; o.connect(gn); gn.connect(c.destination); o.start(c.currentTime + d); o.stop(c.currentTime + d + .2); });
+    } catch (_) {}
+  }
+  function pintaReloj() {
+    const el = document.getElementById("reloj-cifra"); if (!el) return;
+    const m = Math.floor(reloj.restante / 60), s = reloj.restante % 60;
+    el.textContent = String(m).padStart(2, "0") + ":" + String(s).padStart(2, "0");
+    el.classList.toggle("fin", reloj.restante === 0);
+    const b = document.getElementById("reloj-btn"); if (b) b.textContent = reloj.activo ? "Pausar" : (reloj.restante === 0 ? "Listo ✓" : "Iniciar");
+  }
+  function relojUI() {
+    const inp = h("input", { id: "reloj-min", type: "number", min: "1", max: "120", value: String(reloj.min), "aria-label": "Minutos de batido" });
+    inp.addEventListener("change", () => { const v = Math.max(1, Math.min(120, parseInt(inp.value, 10) || 15)); reloj.min = v; if (!reloj.activo) { reloj.restante = v * 60; pintaReloj(); } });
+    const btn = h("button", { class: "btn chico", type: "button", id: "reloj-btn" }, "Iniciar");
+    btn.addEventListener("click", () => {
+      if (!reloj.ctx) { try { reloj.ctx = new (window.AudioContext || window.webkitAudioContext)(); } catch (_) {} }
+      if (reloj.activo) { clearInterval(reloj.id); reloj.activo = false; pantallaEncendida(false); pintaReloj(); return; }
+      if (reloj.restante === 0) reloj.restante = reloj.min * 60;
+      reloj.activo = true; pantallaEncendida(true);
+      reloj.id = setInterval(() => {
+        reloj.restante = Math.max(0, reloj.restante - 1);
+        if (reloj.restante === 0) {
+          clearInterval(reloj.id); reloj.activo = false; pitido(); pantallaEncendida(false);
+          try { navigator.vibrate && navigator.vibrate([300, 150, 300]); } catch (_) {}
+        }
+        pintaReloj();
+      }, 1000);
+      pintaReloj();
+    });
+    const rst = h("button", { class: "btn texto chico", type: "button" }, "Reiniciar");
+    rst.addEventListener("click", () => { clearInterval(reloj.id); reloj.activo = false; pantallaEncendida(false); reloj.restante = reloj.min * 60; pintaReloj(); });
+    const div = h("div", { class: "reloj" }, icono("reloj"), h("span", { class: "cifra", id: "reloj-cifra" }, ""), inp, h("span", { class: "ayuda" }, "min"), btn, rst);
+    setTimeout(pintaReloj, 0);
+    return div;
+  }
+  function renderCalc() {
+    const T = Math.max(50, Math.min(20000, calc.total || 252));
+    const r = calcular(calc.rid, T);
+    $("#c-alerta-agua").hidden = !(calc.agua === "Grifo" && calc.rid !== "base");
+    $("#c-nota-cit").hidden = !(calc.rid === "arg" || calc.rid === "menta");
+    const filas = ORDEN.filter((k) => r[k] > 0).map((k) => {
+      const inp = h("input", { id: "real-" + k, inputmode: "decimal", placeholder: fmt(r[k]), "aria-label": "Peso real de " + NOMBRES[k] });
+      inp.value = calc.reales[k] || "";
+      inp.addEventListener("input", () => { calc.reales[k] = inp.value; guardarCalc(); });
+      const nombre = k === "agua" || k === "reserva" ? NOMBRES[k].replace("Agua", "Agua " + calc.agua.toLowerCase()) : NOMBRES[k];
+      return h("tr", {}, h("td", {}, nombre), h("td", { class: "g" }, fmt(r[k])), h("td", {}, inp));
+    });
+    filas.push(h("tr", { class: "total" }, h("td", {}, "Total del lote"), h("td", { class: "g" }, fmt(T)), h("td", {})));
+    $("#c-tabla").replaceChildren(...filas);
+    $("#c-pasos").replaceChildren(...pasos(calc.rid, r).map((p) => {
+      const cb = h("input", { type: "checkbox", id: "paso-" + p.id, "aria-label": "Hecho" });
+      cb.checked = !!calc.checks[p.id];
+      const li = h("li", { class: cb.checked ? "hecho" : "" }, cb,
+        h("label", { class: "txt", for: "paso-" + p.id }, p.t.map((x, i) => i % 2 ? h("b", {}, x) : x)),
+        p.ref ? h("span", { class: "ref" }, p.ref) : null,
+        p.reloj ? relojUI() : null);
+      cb.addEventListener("change", () => { calc.checks[p.id] = cb.checked; li.classList.toggle("hecho", cb.checked); guardarCalc(); });
+      return li;
+    }));
+  }
+  $("#r-" + calc.rid).checked = true;
+  $("#c-total").value = calc.total; $("#c-agua").value = calc.agua; $("#c-quien").value = calc.quien; $("#c-cambio").value = calc.cambio;
+  for (const rb of document.querySelectorAll("input[name=receta]")) rb.addEventListener("change", () => { calc.rid = rb.value; calc.checks = {}; calc.reales = {}; guardarCalc(); renderCalc(); });
+  $("#c-total").addEventListener("change", (e) => { calc.total = Math.max(50, Math.min(20000, parseFloat(e.target.value) || 252)); e.target.value = calc.total; calc.reales = {}; guardarCalc(); renderCalc(); });
+  $("#c-agua").addEventListener("change", (e) => { calc.agua = e.target.value; guardarCalc(); renderCalc(); });
+  $("#c-quien").addEventListener("input", (e) => { calc.quien = e.target.value; guardarCalc(); });
+  $("#c-cambio").addEventListener("input", (e) => { calc.cambio = e.target.value; guardarCalc(); });
+  $("#c-reset").addEventListener("click", () => {
+    calc.checks = {}; calc.reales = {}; calc.cambio = ""; $("#c-cambio").value = "";
+    clearInterval(reloj.id); reloj.activo = false; reloj.restante = reloj.min * 60;
+    guardarCalc(); renderCalc();
+  });
+  renderCalc();
+
+  $("#c-guardar").addEventListener("click", async () => {
+    if (!db) return;
+    const btn = $("#c-guardar"), err = $("#c-error");
+    const T = calc.total, r = calcular(calc.rid, T);
+    const partes = [], sinReal = [];
+    for (const k of ORDEN) {
+      if (!(r[k] > 0)) continue;
+      const real = num(calc.reales[k]);
+      const corto = { agua: "agua", lido: "lidocaína", citL: "cítrico (lidocaína)", reserva: "agua solución", arg: "arginina", cit: "cítrico", hec: "HEC", gli: "glicerina", pg: "PG", menta: "sol. menta" }[k];
+      partes.push(corto + " " + fmt(real ?? r[k]));
+      if (real == null) sinReal.push(corto);
+    }
+    let pesos = partes.join(" · ");
+    if (sinReal.length) pesos += "\nSin peso real apuntado (se usó el teórico): " + sinReal.join(", ");
+    btn.disabled = true; err.textContent = "";
+    try {
+      await db.collection("lotes").doc().set({
+        fecha: hoy(), quien: calc.quien.trim(), titulo: RECETAS[calc.rid] + " · " + fmt(T).replace(",00", "") + " g",
+        cambio: calc.cambio.trim(), pesos, agua: calc.agua, ph: null, resultado: "", estado: "dato", leccion: "",
+        fotos: [], seguimiento: [], revisiones: { h24: false, d7: false }, receta: calc.rid, total: T,
+        pasosHechos: Object.keys(calc.checks).filter((k) => calc.checks[k]).length,
+        creado: new Date().toISOString()
+      });
+      calc.checks = {}; calc.reales = {}; calc.cambio = ""; $("#c-cambio").value = ""; guardarCalc(); renderCalc();
+      avisar("Lote guardado. Te avisaré a las 24 h y a los 7 días.");
+      irA("diario");
+    } catch (ex) { err.textContent = mensajeError(ex); }
+    finally { btn.disabled = false; }
+  });
+
+  // --- filtros y búsqueda -----------------------------------------------
+  for (const b of document.querySelectorAll(".chipfiltro")) b.addEventListener("click", () => {
+    st.filtro = b.dataset.f;
+    for (const x of document.querySelectorAll(".chipfiltro")) x.setAttribute("aria-pressed", String(x === b));
+    renderDiario();
+  });
+  let tBusca;
+  $("#buscar").addEventListener("input", (e) => { clearTimeout(tBusca); tBusca = setTimeout(() => { st.q = e.target.value.trim().toLowerCase(); renderDiario(); }, 150); });
+
+  // --- formulario de lote -----------------------------------------------
+  const form = $("#form-lote");
+  let porSubir = [];
+  function abrirForm() {
+    form.reset(); porSubir = []; $("#previas").replaceChildren(); $("#f-error").textContent = "";
+    $("#f-fecha").value = hoy(); $("#e-dato").checked = true; $("#f-tira-wrap").hidden = true;
+    form.hidden = false; form.scrollIntoView({ behavior: "smooth", block: "start" }); $("#f-titulo").focus();
+  }
+  $("#btn-nuevo").addEventListener("click", abrirForm);
+  $("#fab-nuevo").addEventListener("click", abrirForm);
+  $("#f-cancelar").addEventListener("click", () => { form.hidden = true; });
+  $("#f-ph").addEventListener("input", (e) => {
+    const v = parseFloat(String(e.target.value).replace(",", "."));
+    const w = $("#f-tira-wrap");
+    if (isNaN(v)) { w.hidden = true; return; }
+    w.replaceChildren(tira(v)); w.hidden = false;
+  });
+  function anadirFotos(files) {
+    for (const f of files) {
+      if (!f.type.startsWith("image/")) continue;
+      porSubir.push(f);
+      $("#previas").append(h("img", { src: URL.createObjectURL(f), alt: f.name }));
+    }
+  }
+  $("#f-fotos").addEventListener("change", (e) => { anadirFotos(e.target.files); e.target.value = ""; });
+  $("#f-camara").addEventListener("change", (e) => { anadirFotos(e.target.files); e.target.value = ""; });
+  const zona = $("#soltar");
+  zona.addEventListener("dragover", (e) => { e.preventDefault(); zona.classList.add("encima"); });
+  zona.addEventListener("dragleave", () => zona.classList.remove("encima"));
+  zona.addEventListener("drop", (e) => { e.preventDefault(); zona.classList.remove("encima"); anadirFotos(e.dataTransfer.files); });
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    if (!db) return;
+    const btn = $("#f-guardar"), err = $("#f-error");
+    btn.disabled = true; err.textContent = "";
+    try {
+      const ids = [];
+      for (let i = 0; i < porSubir.length; i++) {
+        btn.textContent = "Subiendo foto " + (i + 1) + " de " + porSubir.length + "…";
+        ids.push(await subir(porSubir[i]));
+      }
+      btn.textContent = "Guardando…";
+      const phTxt = String($("#f-ph").value).replace(",", ".");
+      const ph = phTxt === "" ? null : parseFloat(phTxt);
+      await db.collection("lotes").doc().set({
+        fecha: $("#f-fecha").value || hoy(),
+        quien: $("#f-quien").value.trim(),
+        titulo: $("#f-titulo").value.trim(),
+        cambio: $("#f-cambio").value.trim(),
+        pesos: $("#f-pesos").value.trim(),
+        agua: $("#f-agua").value,
+        ph: (ph === null || isNaN(ph)) ? null : ph,
+        resultado: $("#f-resultado").value.trim(),
+        estado: (form.querySelector("input[name=estado]:checked") || {}).value || "dato",
+        leccion: $("#f-leccion").value.trim(),
+        fotos: ids, seguimiento: [], revisiones: { h24: false, d7: false },
+        creado: new Date().toISOString()
+      });
+      form.hidden = true;
+      avisar("Lote guardado");
+      irA("diario");
+    } catch (ex) {
+      err.textContent = mensajeError(ex);
+    } finally {
+      btn.disabled = false; btn.textContent = "Guardar en la bitácora";
+    }
+  });
+
+  // --- formulario de truco ----------------------------------------------
+  const ftr = $("#form-truco");
+  $("#btn-truco").addEventListener("click", () => { ftr.reset(); $("#tr-error").textContent = ""; ftr.hidden = false; $("#tr-titulo").focus(); });
+  $("#tr-cancelar").addEventListener("click", () => { ftr.hidden = true; });
+  ftr.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    if (!db) return;
+    try {
+      const n = st.trucos.reduce((m, t) => Math.max(m, Number(t.n) || 0), 0) + 1;
+      await db.collection("trucos").doc("t" + String(n).padStart(2, "0")).set({
+        n, titulo: $("#tr-titulo").value.trim(), que: $("#tr-que").value.trim(),
+        porque: $("#tr-porque").value.trim(), como: $("#tr-como").value.trim(), estado: $("#tr-estado").value
+      });
+      ftr.hidden = true;
+    } catch (ex) { $("#tr-error").textContent = mensajeError(ex); }
+  });
+
+  // --- conexión con la base de datos ---------------------------------------
+  const ordenLotes = (a, b) => (b.fecha || "").localeCompare(a.fecha || "") || (b.creado || "").localeCompare(a.creado || "");
+  if (!db) {
+    const a = $("#aviso-db"); a.textContent = "No se pudo abrir la base de datos. Revisa la conexión y vuelve a abrir la app."; a.hidden = false;
+  } else {
+    const fallo = (e) => { const a = $("#aviso-db"); a.textContent = mensajeError(e); a.hidden = false; };
+    db.collection("lotes").onSnapshot((snap) => {
+      st.lotes = snap.docs.map((x) => ({ id: x.id, ...x.data() })).sort(ordenLotes);
+      contadores(); renderDiario(); renderHoy();
+    }, fallo);
+    db.collection("compras").onSnapshot((snap) => { st.compras = snap.docs.map((x) => ({ id: x.id, ...x.data() })); renderCompras(); }, fallo);
+    db.collection("trucos").orderBy("n").onSnapshot((snap) => { st.trucos = snap.docs.map((x) => ({ id: x.id, ...x.data() })); contadores(); renderTrucos(); }, fallo);
+    db.collection("reglas").orderBy("n").onSnapshot((snap) => { st.reglas = snap.docs.map((x) => ({ id: x.id, ...x.data() })); renderReglas(); }, fallo);
+  }
+})();
+</script>
+</body>
+</html>
