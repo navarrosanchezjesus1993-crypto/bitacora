@@ -8,6 +8,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Bitácora">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="description" content="Bitácora del laboratorio HOTLUB: lotes, fotos, trucos, compras y calculadora.">
 <title>Bitácora HOTLUB</title>
 <link rel="manifest" href="./manifest.webmanifest">
@@ -345,6 +346,7 @@
 
 <main class="envoltura" style="padding-block: 20px 0;">
   <p class="aviso" id="aviso-db" hidden></p>
+  <p class="aviso" id="aviso-ios" hidden>Para tener la app en el iPhone: toca el botón <b>Compartir</b> (el cuadrado con la flecha, abajo en Safari) y elige <b>«Añadir a pantalla de inicio»</b>. <button class="btn texto chico" type="button" id="aviso-ios-cerrar">Entendido</button></p>
 
   <section class="hoy" id="hoy" hidden aria-live="polite">
     <h2><svg class="ic" viewBox="0 0 24 24"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.89 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/></svg>Qué toca revisar</h2>
@@ -519,6 +521,17 @@
 
   const $ = (s) => document.querySelector(s);
   const MESES = ["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"];
+
+  // iPhone: Safari no ofrece "Instalar"; se explica cómo añadirla a la pantalla de inicio
+  (function () {
+    const esIOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
+    const instalada = window.matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
+    let visto = false; try { visto = localStorage.getItem("bitacora-ios-visto") === "1"; } catch (_) {}
+    if (esIOS && !instalada && !visto) {
+      $("#aviso-ios").hidden = false;
+      $("#aviso-ios-cerrar").addEventListener("click", () => { $("#aviso-ios").hidden = true; try { localStorage.setItem("bitacora-ios-visto", "1"); } catch (_) {} });
+    }
+  })();
   const ESTADOS = { bien: "Salió bien", regular: "Regular", mal: "Salió mal", dato: "Dato" };
   const TRUCO_EST = { ok: "✅ Comprobado", probar: "🧪 Por probar", cuidado: "⚠️ Cuidado" };
   const ICONOS = {
