@@ -360,6 +360,7 @@
       <label class="receta"><input type="radio" name="receta" value="arg" id="r-arg" checked><b>Base + L-arginina</b><span>Arginina al 0,5 % con el cítrico dentro de su solución.</span></label>
       <label class="receta"><input type="radio" name="receta" value="menta" id="r-menta"><b>Base + arginina + menta</b><span>Lo anterior más la solución madre de menta (1 gota / 5 kg).</span></label>
       <label class="receta"><input type="radio" name="receta" value="anal" id="r-anal"><b>Anal: base + lidocaína</b><span>7,5 g de lidocaína base por cada 250 g, disuelta con cítrico en proporción exacta en el agua antes de la HEC (método Prueba María). Sin arginina.</span></label>
+      <label class="receta"><input type="radio" name="receta" value="spray" id="r-spray"><b>Spray retardante</b><span>Lidocaína al 5 % en alcohol 96°, PG, glicerina y agua. Sin HEC, sin cítrico y sin medir pH.</span></label>
     </div>
     <div class="ajustes">
       <div class="campo"><label for="c-total">Tamaño del lote (g)</label><input id="c-total" type="number" min="50" max="20000" step="1" value="252" inputmode="numeric"></div>
@@ -870,13 +871,18 @@
   // Cítrico para la arginina: dosis INICIAL baja (0,40 g por g); se completa con el pH-metro.
   // Lidocaína: 7,5 g por 250 g; cítrico 0,41 g por g (1 citrato por 2 lidocaínas → pH ≈ 5,6 teórico).
   const P = { hec: 3.5 / 252, gli: 8.75 / 252, pg: 3.75 / 252, reserva: 20 / 252, arg: 0.005, cit: 0.005 * 0.40, menta: 0.004, lido: 7.5 / 250, citL: (7.5 / 250) * 0.41 };
-  const RECETAS = { base: "Base sola", arg: "Base + L-arginina", menta: "Base + arginina + menta", anal: "Anal: base + lidocaína" };
+  // Spray retardante V0.1 (por 100 g): lidocaína 5 · alcohol 96° 30 · PG 35 · glicerina 10 · agua 20.
+  const SPRAY = { lido: 0.05, alcohol: 0.30, pg: 0.35, gli: 0.10, agua: 0.20 };
+  const RECETAS = { base: "Base sola", arg: "Base + L-arginina", menta: "Base + arginina + menta", anal: "Anal: base + lidocaína", spray: "Spray retardante" };
   const NOMBRES = {
-    lido: "Lidocaína base", citL: "Ácido cítrico para la lidocaína (inicial)",
+    lido: "Lidocaína base", citL: "Ácido cítrico para la lidocaína (inicial)", alcohol: "Alcohol etílico 96°",
     agua: "Agua (vaso principal)", reserva: "Agua (para disolver el activo)", arg: "L-arginina",
     cit: "Ácido cítrico (dosis inicial)", hec: "HEC (Cellosize QP100)", gli: "Glicerina", pg: "Propilenglicol (para la papilla)", menta: "Solución madre de menta"
   };
-  const ORDEN = ["agua", "lido", "citL", "reserva", "arg", "cit", "hec", "gli", "pg", "menta"];
+  const ORDEN_GEL = ["agua", "lido", "citL", "reserva", "arg", "cit", "hec", "gli", "pg", "menta"];
+  const ORDEN_SPRAY = ["alcohol", "lido", "pg", "gli", "agua"];
+  const orden = (rid) => rid === "spray" ? ORDEN_SPRAY : ORDEN_GEL;
+  const nombreDe = (rid, k) => (rid === "spray" && k === "pg") ? "Propilenglicol" : (rid === "spray" && k === "agua") ? "Agua desmineralizada" : NOMBRES[k];
   const fmt = (n) => n.toFixed(2).replace(".", ",");
   const num = (s) => { const v = parseFloat(String(s || "").replace(",", ".")); return isNaN(v) ? null : v; };
 
@@ -885,6 +891,11 @@
   const guardarCalc = () => { try { localStorage.setItem("bitacora-calc", JSON.stringify(calc)); } catch (_) {} };
 
   function calcular(rid, T) {
+    if (rid === "spray") {
+      const r = { hec: 0, citL: 0, cit: 0, arg: 0, menta: 0, reserva: 0 };
+      for (const k of Object.keys(SPRAY)) r[k] = T * SPRAY[k];
+      return r;
+    }
     const conArg = rid === "arg" || rid === "menta", conMenta = rid === "menta", conLido = rid === "anal";
     const r = { hec: T * P.hec, gli: T * P.gli, arg: conArg ? T * P.arg : 0, cit: conArg ? T * P.cit : 0, menta: conMenta ? T * P.menta : 0,
       lido: conLido ? T * P.lido : 0, citL: conLido ? T * P.citL : 0 };
@@ -898,6 +909,18 @@
   function pasos(rid, r) {
     const g = (k) => fmt(r[k]) + " g";
     const L = [];
+    if (rid === "spray") {
+      L.push({ id: "p0", t: ["Ponte guantes y trabaja lejos de fuego o cocina: el alcohol es inflamable. Usa un frasco de vidrio o PET con tapa."] });
+      L.push({ id: "p1", t: ["Pesa ", g("alcohol"), " de alcohol etílico de 96° en el frasco."], ref: "Si el alcohol fuera de 70°, avisa: trae 30 % de agua y cambia la fórmula" });
+      L.push({ id: "p2", t: ["Añade ", g("lido"), " de lidocaína base y agita. Se disuelve en pocos minutos y queda transparente. Aquí NO va ácido cítrico."] });
+      L.push({ id: "p3", t: ["Añade ", g("pg"), " de propilenglicol y ", g("gli"), " de glicerina. Agita hasta que quede uniforme."] });
+      L.push({ id: "p4", t: ["Añade el agua POCO A POCO: ", g("agua"), " en total, agitando. Si en algún momento se enturbia, para y apunta cuánta agua entró: ese es el límite."], ref: "Lo turbio es lidocaína que ya no cabe disuelta" });
+      L.push({ id: "p5", t: ["Pásalo al frasco con pulverizador. Pésalo lleno, da ", "10 pulsaciones", " sobre un papel y vuelve a pesarlo. La diferencia ÷ 10 es lo que sale por disparo. Apúntalo en el lote."], ref: "Al 5 %, cada 0,10 g por disparo = 5 mg de lidocaína" });
+      L.push({ id: "p6", t: ["Prueba de escozor SOLO en el antebrazo: un disparo, espera 5 min, apunta si pica (0 nada · 1 leve · 2 claro · 3 fuerte) y cuánto tarda en secarse."], ref: "Ningún lote LAB se prueba en genitales" });
+      L.push({ id: "p7", t: ["Separa ", "10 g", " en un frasquito a la nevera. Revisa cristales a 24 h y 7 días, en ambiente y en nevera."] });
+      L.push({ id: "f1", t: ["Etiqueta: «LAB · NO USAR · LIDOCAÍNA · INFLAMABLE · fecha». Guarda el lote aquí abajo."], ref: "Regla 6" });
+      return L;
+    }
     if (rid === "menta") L.push({ id: "m0", t: ["¿Tienes la solución madre de menta? Si no: ", "1 gota", " de menta en ", "20,00 g", " de PG, en frasco ámbar. Agita hasta que quede transparente. Si sale turbia, no la uses."], ref: "Truco 6" });
     if (rid === "anal") {
       L.push({ id: "l0", t: ["Ponte guantes. Pesa ", g("agua"), " de agua en el vaso principal (nada de grifo). Puedes entibiarla, sin pasar de ", "~50 °C", ": ayuda a disolver más rápido."], ref: "Truco 10" });
@@ -978,13 +1001,13 @@
   function renderCalc() {
     const T = Math.max(50, Math.min(20000, calc.total || 252));
     const r = calcular(calc.rid, T);
-    $("#c-alerta-agua").hidden = !(calc.agua === "Grifo" && calc.rid !== "base");
+    $("#c-alerta-agua").hidden = !(calc.agua === "Grifo" && calc.rid !== "base" && calc.rid !== "spray");
     $("#c-nota-cit").hidden = !(calc.rid === "arg" || calc.rid === "menta");
-    const filas = ORDEN.filter((k) => r[k] > 0).map((k) => {
-      const inp = h("input", { id: "real-" + k, inputmode: "decimal", placeholder: fmt(r[k]), "aria-label": "Peso real de " + NOMBRES[k] });
+    const filas = orden(calc.rid).filter((k) => r[k] > 0).map((k) => {
+      const inp = h("input", { id: "real-" + k, inputmode: "decimal", placeholder: fmt(r[k]), "aria-label": "Peso real de " + nombreDe(calc.rid, k) });
       inp.value = calc.reales[k] || "";
       inp.addEventListener("input", () => { calc.reales[k] = inp.value; guardarCalc(); });
-      const nombre = k === "agua" || k === "reserva" ? NOMBRES[k].replace("Agua", "Agua " + calc.agua.toLowerCase()) : NOMBRES[k];
+      const nombre = (calc.rid !== "spray" && (k === "agua" || k === "reserva")) ? NOMBRES[k].replace("Agua", "Agua " + calc.agua.toLowerCase()) : nombreDe(calc.rid, k);
       return h("tr", {}, h("td", {}, nombre), h("td", { class: "g" }, fmt(r[k])), h("td", {}, inp));
     });
     filas.push(h("tr", { class: "total" }, h("td", {}, "Total del lote"), h("td", { class: "g" }, fmt(T)), h("td", {})));
@@ -1002,7 +1025,14 @@
   }
   $("#r-" + calc.rid).checked = true;
   $("#c-total").value = calc.total; $("#c-agua").value = calc.agua; $("#c-quien").value = calc.quien; $("#c-cambio").value = calc.cambio;
-  for (const rb of document.querySelectorAll("input[name=receta]")) rb.addEventListener("change", () => { calc.rid = rb.value; calc.checks = {}; calc.reales = {}; guardarCalc(); renderCalc(); });
+  for (const rb of document.querySelectorAll("input[name=receta]")) rb.addEventListener("change", () => {
+    calc.rid = rb.value; calc.checks = {}; calc.reales = {};
+    // El spray se hace en lotes de 100 g; los geles, de 252 g
+    if (rb.value === "spray" && calc.total === 252) calc.total = 100;
+    if (rb.value !== "spray" && calc.total === 100) calc.total = 252;
+    $("#c-total").value = calc.total;
+    guardarCalc(); renderCalc();
+  });
   $("#c-total").addEventListener("change", (e) => { calc.total = Math.max(50, Math.min(20000, parseFloat(e.target.value) || 252)); e.target.value = calc.total; calc.reales = {}; guardarCalc(); renderCalc(); });
   $("#c-agua").addEventListener("change", (e) => { calc.agua = e.target.value; guardarCalc(); renderCalc(); });
   $("#c-quien").addEventListener("input", (e) => { calc.quien = e.target.value; guardarCalc(); });
@@ -1019,10 +1049,10 @@
     const btn = $("#c-guardar"), err = $("#c-error");
     const T = calc.total, r = calcular(calc.rid, T);
     const partes = [], sinReal = [];
-    for (const k of ORDEN) {
+    for (const k of orden(calc.rid)) {
       if (!(r[k] > 0)) continue;
       const real = num(calc.reales[k]);
-      const corto = { agua: "agua", lido: "lidocaína", citL: "cítrico (lidocaína)", reserva: "agua solución", arg: "arginina", cit: "cítrico", hec: "HEC", gli: "glicerina", pg: "PG", menta: "sol. menta" }[k];
+      const corto = { agua: "agua", alcohol: "alcohol 96°", lido: "lidocaína", citL: "cítrico (lidocaína)", reserva: "agua solución", arg: "arginina", cit: "cítrico", hec: "HEC", gli: "glicerina", pg: "PG", menta: "sol. menta" }[k];
       partes.push(corto + " " + fmt(real ?? r[k]));
       if (real == null) sinReal.push(corto);
     }
