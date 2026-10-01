@@ -1,6 +1,6 @@
 // Service worker de la Bitácora HOTLUB: guarda la app en el celular para que abra sin señal.
 // Si cambias la app, sube el número de versión para que los celulares la actualicen.
-const CACHE = "bitacora-v9";
+const CACHE = "bitacora-v10";
 const SHELL = ["./", "./index.html", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png"];
 
 self.addEventListener("install", (e) => {
@@ -18,7 +18,7 @@ self.addEventListener("fetch", (e) => {
   const url = new URL(e.request.url);
   if (url.origin !== location.origin) return;
   e.respondWith(
-    fetch(e.request).then((r) => {
+    fetch(e.request, { cache: "no-cache" }).then((r) => {
       const copia = r.clone();
       caches.open(CACHE).then((c) => c.put(e.request, copia));
       return r;

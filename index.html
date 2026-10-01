@@ -553,7 +553,12 @@
   } catch (e) { db = null; }
 
   // Service worker: la app abre aunque no haya señal
-  if ("serviceWorker" in navigator) { navigator.serviceWorker.register("./sw.js").catch(() => {}); }
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("./sw.js").catch(() => {});
+    // Cuando llega una versión nueva de la app, se recarga sola una vez
+    let recargado = false;
+    navigator.serviceWorker.addEventListener("controllerchange", () => { if (recargado) return; recargado = true; location.reload(); });
+  }
 
   // Botón "Instalar" cuando el celular lo permite
   let promptInstalar = null;
