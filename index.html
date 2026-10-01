@@ -366,6 +366,7 @@
       <div class="campo"><label for="c-total">Tamaño del lote (g)</label><input id="c-total" type="number" min="50" max="20000" step="1" value="252" inputmode="numeric"></div>
       <div class="campo"><label for="c-agua">Agua</label><select id="c-agua"><option>Destilada</option><option>Desmineralizada</option><option>Grifo</option><option>Hervida</option><option>De mesa</option></select></div>
       <div class="campo"><label for="c-quien">Quién lo hace</label><input id="c-quien" list="personas" placeholder="Kike"></div>
+      <div class="campo" id="c-lido-wrap" hidden><label for="c-lido">Lidocaína (%)</label><select id="c-lido"><option value="5">5 % (V0.1)</option><option value="7.5">7,5 %</option><option value="10">10 % (como los comerciales)</option></select></div>
       <button class="btn outl" type="button" id="c-reset">Empezar de nuevo</button>
     </div>
     <p class="alerta-agua" id="c-alerta-agua" hidden>Agua del grifo: con arginina y cítrico forma cristalitos con las horas (truco 10). Usa destilada.</p>
@@ -871,8 +872,9 @@
   // Cítrico para la arginina: dosis INICIAL baja (0,40 g por g); se completa con el pH-metro.
   // Lidocaína: 7,5 g por 250 g; cítrico 0,41 g por g (1 citrato por 2 lidocaínas → pH ≈ 5,6 teórico).
   const P = { hec: 3.5 / 252, gli: 8.75 / 252, pg: 3.75 / 252, reserva: 20 / 252, arg: 0.005, cit: 0.005 * 0.40, menta: 0.004, lido: 7.5 / 250, citL: (7.5 / 250) * 0.41 };
-  // Spray retardante V0.1 (por 100 g): lidocaína 5 · alcohol 96° 30 · PG 35 · glicerina 10 · agua 20.
-  const SPRAY = { lido: 0.05, alcohol: 0.30, pg: 0.35, gli: 0.10, agua: 0.20 };
+  // Spray retardante (por 100 g): alcohol 96° 30 · PG 35 · glicerina 10 · lidocaína + agua = 25.
+  // Al subir la lidocaína (5 → 7,5 → 10 %) se quita la misma cantidad de agua, así el resto no cambia.
+  const SPRAY = { alcohol: 0.30, pg: 0.35, gli: 0.10 };
   const RECETAS = { base: "Base sola", arg: "Base + L-arginina", menta: "Base + arginina + menta", anal: "Anal: base + lidocaína", spray: "Spray retardante" };
   const NOMBRES = {
     lido: "Lidocaína base", citL: "Ácido cítrico para la lidocaína (inicial)", alcohol: "Alcohol etílico 96°",
@@ -886,7 +888,7 @@
   const fmt = (n) => n.toFixed(2).replace(".", ",");
   const num = (s) => { const v = parseFloat(String(s || "").replace(",", ".")); return isNaN(v) ? null : v; };
 
-  let calc = { rid: "arg", total: 252, agua: "Destilada", quien: "", cambio: "", checks: {}, reales: {} };
+  let calc = { rid: "arg", total: 252, agua: "Destilada", quien: "", cambio: "", checks: {}, reales: {}, lidoPct: 5 };
   try { const g = JSON.parse(localStorage.getItem("bitacora-calc") || "null"); if (g && RECETAS[g.rid]) calc = Object.assign(calc, g); } catch (_) {}
   const guardarCalc = () => { try { localStorage.setItem("bitacora-calc", JSON.stringify(calc)); } catch (_) {} };
 
@@ -894,6 +896,9 @@
     if (rid === "spray") {
       const r = { hec: 0, citL: 0, cit: 0, arg: 0, menta: 0, reserva: 0 };
       for (const k of Object.keys(SPRAY)) r[k] = T * SPRAY[k];
+      const pct = Math.max(1, Math.min(12, parseFloat(calc.lidoPct) || 5)) / 100;
+      r.lido = T * pct;
+      r.agua = T * (0.25 - pct);
       return r;
     }
     const conArg = rid === "arg" || rid === "menta", conMenta = rid === "menta", conLido = rid === "anal";
@@ -912,10 +917,10 @@
     if (rid === "spray") {
       L.push({ id: "p0", t: ["Ponte guantes y trabaja lejos de fuego o cocina: el alcohol es inflamable. Usa un frasco de vidrio o PET con tapa."] });
       L.push({ id: "p1", t: ["Pesa ", g("alcohol"), " de alcohol etílico de 96° en el frasco."], ref: "Si el alcohol fuera de 70°, avisa: trae 30 % de agua y cambia la fórmula" });
-      L.push({ id: "p2", t: ["Añade ", g("lido"), " de lidocaína base y agita. Se disuelve en pocos minutos y queda transparente. Aquí NO va ácido cítrico."] });
+      L.push({ id: "p2", t: ["Añade ", g("lido"), " de lidocaína base y agita. Se disuelve en pocos minutos y queda transparente. Aquí NO va ácido cítrico."], ref: calc.lidoPct > 5 ? "Al " + String(calc.lidoPct).replace(".", ",") + " %: si al final queda turbio, el agua es el límite. Anótalo y en el siguiente lote se baja el agua" : null });
       L.push({ id: "p3", t: ["Añade ", g("pg"), " de propilenglicol y ", g("gli"), " de glicerina. Agita hasta que quede uniforme."] });
       L.push({ id: "p4", t: ["Añade el agua POCO A POCO: ", g("agua"), " en total, agitando. Si en algún momento se enturbia, para y apunta cuánta agua entró: ese es el límite."], ref: "Lo turbio es lidocaína que ya no cabe disuelta" });
-      L.push({ id: "p5", t: ["Pásalo al frasco con pulverizador. Pésalo lleno, da ", "10 pulsaciones", " sobre un papel y vuelve a pesarlo. La diferencia ÷ 10 es lo que sale por disparo. Apúntalo en el lote."], ref: "Al 5 %, cada 0,10 g por disparo = 5 mg de lidocaína" });
+      L.push({ id: "p5", t: ["Pásalo al frasco con pulverizador. Pésalo lleno, da ", "10 pulsaciones", " sobre un papel y vuelve a pesarlo. La diferencia ÷ 10 es lo que sale por disparo. Apúntalo en el lote."], ref: "Al " + String(calc.lidoPct).replace(".", ",") + " %, cada 0,10 g por disparo = " + (calc.lidoPct * 10).toFixed(0) + " mg de lidocaína" });
       L.push({ id: "p6", t: ["Prueba de escozor SOLO en el antebrazo: un disparo, espera 5 min, apunta si pica (0 nada · 1 leve · 2 claro · 3 fuerte) y cuánto tarda en secarse."], ref: "Ningún lote LAB se prueba en genitales" });
       L.push({ id: "p7", t: ["Separa ", "10 g", " en un frasquito a la nevera. Revisa cristales a 24 h y 7 días, en ambiente y en nevera."] });
       L.push({ id: "f1", t: ["Etiqueta: «LAB · NO USAR · LIDOCAÍNA · INFLAMABLE · fecha». Guarda el lote aquí abajo."], ref: "Regla 6" });
@@ -1002,6 +1007,7 @@
     const T = Math.max(50, Math.min(20000, calc.total || 252));
     const r = calcular(calc.rid, T);
     $("#c-alerta-agua").hidden = !(calc.agua === "Grifo" && calc.rid !== "base" && calc.rid !== "spray");
+    $("#c-lido-wrap").hidden = calc.rid !== "spray";
     $("#c-nota-cit").hidden = !(calc.rid === "arg" || calc.rid === "menta");
     const filas = orden(calc.rid).filter((k) => r[k] > 0).map((k) => {
       const inp = h("input", { id: "real-" + k, inputmode: "decimal", placeholder: fmt(r[k]), "aria-label": "Peso real de " + nombreDe(calc.rid, k) });
@@ -1035,6 +1041,8 @@
   });
   $("#c-total").addEventListener("change", (e) => { calc.total = Math.max(50, Math.min(20000, parseFloat(e.target.value) || 252)); e.target.value = calc.total; calc.reales = {}; guardarCalc(); renderCalc(); });
   $("#c-agua").addEventListener("change", (e) => { calc.agua = e.target.value; guardarCalc(); renderCalc(); });
+  $("#c-lido").value = String(calc.lidoPct);
+  $("#c-lido").addEventListener("change", (e) => { calc.lidoPct = parseFloat(e.target.value) || 5; calc.reales = {}; guardarCalc(); renderCalc(); });
   $("#c-quien").addEventListener("input", (e) => { calc.quien = e.target.value; guardarCalc(); });
   $("#c-cambio").addEventListener("input", (e) => { calc.cambio = e.target.value; guardarCalc(); });
   $("#c-reset").addEventListener("click", () => {
@@ -1061,7 +1069,7 @@
     btn.disabled = true; err.textContent = "";
     try {
       await db.collection("lotes").doc().set({
-        fecha: hoy(), quien: calc.quien.trim(), titulo: RECETAS[calc.rid] + " · " + fmt(T).replace(",00", "") + " g",
+        fecha: hoy(), quien: calc.quien.trim(), titulo: RECETAS[calc.rid] + (calc.rid === "spray" ? " " + String(calc.lidoPct).replace(".", ",") + " %" : "") + " · " + fmt(T).replace(",00", "") + " g",
         cambio: calc.cambio.trim(), pesos, agua: calc.agua, ph: null, resultado: "", estado: "dato", leccion: "",
         fotos: [], seguimiento: [], revisiones: { h24: false, d7: false }, receta: calc.rid, total: T,
         pasosHechos: Object.keys(calc.checks).filter((k) => calc.checks[k]).length,
