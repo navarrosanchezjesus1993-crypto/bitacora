@@ -361,6 +361,7 @@
       <label class="receta"><input type="radio" name="receta" value="menta" id="r-menta"><b>Base + arginina + menta</b><span>Lo anterior más la solución madre de menta (1 gota / 5 kg).</span></label>
       <label class="receta"><input type="radio" name="receta" value="anal" id="r-anal"><b>Anal: base + lidocaína</b><span>7,5 g de lidocaína base por cada 250 g, disuelta con cítrico en proporción exacta en el agua antes de la HEC (método Prueba María). Sin arginina.</span></label>
       <label class="receta"><input type="radio" name="receta" value="spray" id="r-spray"><b>Spray retardante</b><span>Lidocaína al 5 % en alcohol 96°, PG, glicerina y agua. Sin HEC, sin cítrico y sin medir pH.</span></label>
+      <label class="receta"><input type="radio" name="receta" value="bolas" id="r-bolas"><b>Bolas que se derriten</b><span>Base de manteca de cacao, aceite de coco y almendras. Se funde al calor del cuerpo. Sin agua. Versión artesanal de las Brazilian Balls.</span></label>
     </div>
     <div class="ajustes">
       <div class="campo"><label for="c-total">Tamaño del lote (g)</label><input id="c-total" type="number" min="50" max="20000" step="1" value="252" inputmode="numeric"></div>
@@ -875,15 +876,19 @@
   // Spray retardante (por 100 g): alcohol 96° 30 · PG 35 · glicerina 10 · lidocaína + agua = 25.
   // Al subir la lidocaína (5 → 7,5 → 10 %) se quita la misma cantidad de agua, así el resto no cambia.
   const SPRAY = { alcohol: 0.30, pg: 0.35, gli: 0.10 };
-  const RECETAS = { base: "Base sola", arg: "Base + L-arginina", menta: "Base + arginina + menta", anal: "Anal: base + lidocaína", spray: "Spray retardante" };
+  // Bolas que se derriten V0.1 (por 100 g, ~25 bolas de 4 g): cacao 58 · coco 20 · almendras 20 · vitamina E 1 · aroma 1.
+  const BOLAS = { cacao: 0.58, coco: 0.20, almendras: 0.20, vitE: 0.01, aroma: 0.01 };
+  const RECETAS = { base: "Base sola", arg: "Base + L-arginina", menta: "Base + arginina + menta", anal: "Anal: base + lidocaína", spray: "Spray retardante", bolas: "Bolas que se derriten" };
   const NOMBRES = {
+    cacao: "Manteca de cacao", coco: "Aceite de coco", almendras: "Aceite de almendras dulces", vitE: "Vitamina E (tocoferol)", aroma: "Aroma oleosoluble",
     lido: "Lidocaína base", citL: "Ácido cítrico para la lidocaína (inicial)", alcohol: "Alcohol etílico 96°",
     agua: "Agua (vaso principal)", reserva: "Agua (para disolver el activo)", arg: "L-arginina",
     cit: "Ácido cítrico (dosis inicial)", hec: "HEC (Cellosize QP100)", gli: "Glicerina", pg: "Propilenglicol (para la papilla)", menta: "Solución madre de menta"
   };
   const ORDEN_GEL = ["agua", "lido", "citL", "reserva", "arg", "cit", "hec", "gli", "pg", "menta"];
   const ORDEN_SPRAY = ["alcohol", "lido", "pg", "gli", "agua"];
-  const orden = (rid) => rid === "spray" ? ORDEN_SPRAY : ORDEN_GEL;
+  const ORDEN_BOLAS = ["cacao", "coco", "almendras", "vitE", "aroma"];
+  const orden = (rid) => rid === "spray" ? ORDEN_SPRAY : rid === "bolas" ? ORDEN_BOLAS : ORDEN_GEL;
   const nombreDe = (rid, k) => (rid === "spray" && k === "pg") ? "Propilenglicol" : (rid === "spray" && k === "agua") ? "Agua desmineralizada" : NOMBRES[k];
   const fmt = (n) => n.toFixed(2).replace(".", ",");
   const num = (s) => { const v = parseFloat(String(s || "").replace(",", ".")); return isNaN(v) ? null : v; };
@@ -893,6 +898,11 @@
   const guardarCalc = () => { try { localStorage.setItem("bitacora-calc", JSON.stringify(calc)); } catch (_) {} };
 
   function calcular(rid, T) {
+    if (rid === "bolas") {
+      const r = { hec: 0, citL: 0, cit: 0, arg: 0, menta: 0, reserva: 0, agua: 0, lido: 0, gli: 0, pg: 0 };
+      for (const k of Object.keys(BOLAS)) r[k] = T * BOLAS[k];
+      return r;
+    }
     if (rid === "spray") {
       const r = { hec: 0, citL: 0, cit: 0, arg: 0, menta: 0, reserva: 0 };
       for (const k of Object.keys(SPRAY)) r[k] = T * SPRAY[k];
@@ -914,6 +924,18 @@
   function pasos(rid, r) {
     const g = (k) => fmt(r[k]) + " g";
     const L = [];
+    if (rid === "bolas") {
+      L.push({ id: "o0", t: ["Moldes de silicona de esferas (", "2 cm", " de diámetro ≈ 4 g por bola), limpios y SECOS. Una gota de agua en el molde estropea la bola."] });
+      L.push({ id: "o1", t: ["Funde al baño María, sin que hierva el agua, ", g("cacao"), " de manteca de cacao. Tarda: es la parte dura."] });
+      L.push({ id: "o2", t: ["Añade ", g("coco"), " de aceite de coco y ", g("almendras"), " de aceite de almendras. Remueve hasta que esté todo líquido y uniforme. Retira del fuego."] });
+      L.push({ id: "o3", t: ["Deja enfriar removiendo hasta ", "~40 °C", " (tibio al tacto, empieza a espesar en los bordes). Entonces añade ", g("vitE"), " de vitamina E y ", g("aroma"), " de aroma. Si está muy caliente, el aroma se evapora."] });
+      L.push({ id: "o4", t: ["Vierte en los moldes con un gotero o jeringa. Golpea el molde suave contra la mesa para sacar burbujas."] });
+      L.push({ id: "o5", t: ["Nevera ", "30 min", ". Desmolda. Pesa 5 bolas una a una y apunta los pesos: tienen que ser casi iguales."] });
+      L.push({ id: "o6", t: ["Prueba de cuerpo: una bola en la palma cerrada. Apunta en cuántos minutos empieza a derretirse (objetivo: 1–2 min)."], ref: "Si tarda más de 3 min, hay demasiada manteca de cacao" });
+      L.push({ id: "o7", t: ["Prueba de verano: una bola en un vaso cerrado al sol o junto a una ventana caliente 2 h (apunta la temperatura si puedes). Tiene que seguir siendo bola."], ref: "Si se deforma, en el siguiente lote sube el cacao o añade 2–3 % de cera de abejas" });
+      L.push({ id: "f1", t: ["Guarda las bolas en un frasco cerrado, en sitio fresco. Etiqueta «LAB · NO USAR · fecha». Revisa el olor a 7 y 30 días (rancio = falta antioxidante o aceite viejo)."], ref: "Regla 6" });
+      return L;
+    }
     if (rid === "spray") {
       L.push({ id: "p0", t: ["Ponte guantes y trabaja lejos de fuego o cocina: el alcohol es inflamable. Usa un frasco de vidrio o PET con tapa."] });
       L.push({ id: "p1", t: ["Pesa ", g("alcohol"), " de alcohol etílico de 96° en el frasco."], ref: "Si el alcohol fuera de 70°, avisa: trae 30 % de agua y cambia la fórmula" });
@@ -1006,7 +1028,7 @@
   function renderCalc() {
     const T = Math.max(50, Math.min(20000, calc.total || 252));
     const r = calcular(calc.rid, T);
-    $("#c-alerta-agua").hidden = !(calc.agua === "Grifo" && calc.rid !== "base" && calc.rid !== "spray");
+    $("#c-alerta-agua").hidden = !(calc.agua === "Grifo" && calc.rid !== "base" && calc.rid !== "spray" && calc.rid !== "bolas");
     $("#c-lido-wrap").hidden = calc.rid !== "spray";
     $("#c-nota-cit").hidden = !(calc.rid === "arg" || calc.rid === "menta");
     const filas = orden(calc.rid).filter((k) => r[k] > 0).map((k) => {
@@ -1034,8 +1056,9 @@
   for (const rb of document.querySelectorAll("input[name=receta]")) rb.addEventListener("change", () => {
     calc.rid = rb.value; calc.checks = {}; calc.reales = {};
     // El spray se hace en lotes de 100 g; los geles, de 252 g
-    if (rb.value === "spray" && calc.total === 252) calc.total = 100;
-    if (rb.value !== "spray" && calc.total === 100) calc.total = 252;
+    const chico = rb.value === "spray" || rb.value === "bolas";
+    if (chico && calc.total === 252) calc.total = 100;
+    if (!chico && calc.total === 100) calc.total = 252;
     $("#c-total").value = calc.total;
     guardarCalc(); renderCalc();
   });
@@ -1060,7 +1083,7 @@
     for (const k of orden(calc.rid)) {
       if (!(r[k] > 0)) continue;
       const real = num(calc.reales[k]);
-      const corto = { agua: "agua", alcohol: "alcohol 96°", lido: "lidocaína", citL: "cítrico (lidocaína)", reserva: "agua solución", arg: "arginina", cit: "cítrico", hec: "HEC", gli: "glicerina", pg: "PG", menta: "sol. menta" }[k];
+      const corto = { cacao: "manteca cacao", coco: "aceite coco", almendras: "almendras", vitE: "vit. E", aroma: "aroma", agua: "agua", alcohol: "alcohol 96°", lido: "lidocaína", citL: "cítrico (lidocaína)", reserva: "agua solución", arg: "arginina", cit: "cítrico", hec: "HEC", gli: "glicerina", pg: "PG", menta: "sol. menta" }[k];
       partes.push(corto + " " + fmt(real ?? r[k]));
       if (real == null) sinReal.push(corto);
     }
