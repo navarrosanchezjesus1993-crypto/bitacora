@@ -361,7 +361,8 @@
       <label class="receta"><input type="radio" name="receta" value="menta" id="r-menta"><b>Base + arginina + menta</b><span>Lo anterior más la solución madre de menta (1 gota / 5 kg).</span></label>
       <label class="receta"><input type="radio" name="receta" value="anal" id="r-anal"><b>Anal: base + lidocaína</b><span>7,5 g de lidocaína base por cada 250 g, disuelta con cítrico en proporción exacta en el agua antes de la HEC (método Prueba María). Sin arginina.</span></label>
       <label class="receta"><input type="radio" name="receta" value="spray" id="r-spray"><b>Spray retardante</b><span>Lidocaína al 5 % en alcohol 96°, PG, glicerina y agua. Sin HEC, sin cítrico y sin medir pH.</span></label>
-      <label class="receta"><input type="radio" name="receta" value="bolas" id="r-bolas"><b>Bolas que se derriten</b><span>Base de manteca de cacao, aceite de coco y almendras. Se funde al calor del cuerpo. Sin agua. Versión artesanal de las Brazilian Balls.</span></label>
+      <label class="receta"><input type="radio" name="receta" value="cascara" id="r-cascara"><b>Bolas con cáscara</b><span>Esferificación inversa: base HEC con lactato de calcio por dentro, baño de alginato por fuera. La cáscara se rompe al apretar.</span></label>
+      <label class="receta"><input type="radio" name="receta" value="bolas" id="r-bolas"><b>Bolas que se derriten</b><span>Base de manteca de cacao, aceite de coco y almendras. Se funde al calor del cuerpo. Sin agua.</span></label>
     </div>
     <div class="ajustes">
       <div class="campo"><label for="c-total">Tamaño del lote (g)</label><input id="c-total" type="number" min="50" max="20000" step="1" value="252" inputmode="numeric"></div>
@@ -370,7 +371,7 @@
       <div class="campo" id="c-lido-wrap" hidden><label for="c-lido">Lidocaína (%)</label><select id="c-lido"><option value="5">5 % (V0.1)</option><option value="7.5">7,5 %</option><option value="10">10 % (como los comerciales)</option></select></div>
       <button class="btn outl" type="button" id="c-reset">Empezar de nuevo</button>
     </div>
-    <p class="alerta-agua" id="c-alerta-agua" hidden>Agua del grifo: con arginina y cítrico forma cristalitos con las horas (truco 10). Usa destilada.</p>
+    <p class="alerta-agua" id="c-alerta-agua" hidden>Agua del grifo: su calcio forma cristalitos con arginina y cítrico, y gelifica el baño de alginato (truco 10). Usa destilada o desmineralizada.</p>
     <div class="seccion">
       <h2>Qué pesar</h2>
       <div class="tabla-pesar"><table>
@@ -878,8 +879,11 @@
   const SPRAY = { alcohol: 0.30, pg: 0.35, gli: 0.10 };
   // Bolas que se derriten V0.1 (por 100 g, ~25 bolas de 4 g): cacao 58 · coco 20 · almendras 20 · vitamina E 1 · aroma 1.
   const BOLAS = { cacao: 0.58, coco: 0.20, almendras: 0.20, vitE: 0.01, aroma: 0.01 };
-  const RECETAS = { base: "Base sola", arg: "Base + L-arginina", menta: "Base + arginina + menta", anal: "Anal: base + lidocaína", spray: "Spray retardante", bolas: "Bolas que se derriten" };
+  // Bolas con cáscara V0.1: interior = base n.º 9 con 2 % de lactato de calcio; baño = 6 veces el interior, alginato al 0,5 %.
+  const RECETAS = { base: "Base sola", arg: "Base + L-arginina", menta: "Base + arginina + menta", anal: "Anal: base + lidocaína", spray: "Spray retardante", bolas: "Bolas que se derriten", cascara: "Bolas con cáscara" };
+  const TAM_DEFECTO = { spray: 100, bolas: 100, cascara: 50 };
   const NOMBRES = {
+    banoAgua: "Baño: agua desmineralizada", banoAlg: "Baño: alginato de sodio", lactato: "Lactato de calcio (en el agua, antes de la HEC)",
     cacao: "Manteca de cacao", coco: "Aceite de coco", almendras: "Aceite de almendras dulces", vitE: "Vitamina E (tocoferol)", aroma: "Aroma oleosoluble",
     lido: "Lidocaína base", citL: "Ácido cítrico para la lidocaína (inicial)", alcohol: "Alcohol etílico 96°",
     agua: "Agua (vaso principal)", reserva: "Agua (para disolver el activo)", arg: "L-arginina",
@@ -888,7 +892,8 @@
   const ORDEN_GEL = ["agua", "lido", "citL", "reserva", "arg", "cit", "hec", "gli", "pg", "menta"];
   const ORDEN_SPRAY = ["alcohol", "lido", "pg", "gli", "agua"];
   const ORDEN_BOLAS = ["cacao", "coco", "almendras", "vitE", "aroma"];
-  const orden = (rid) => rid === "spray" ? ORDEN_SPRAY : rid === "bolas" ? ORDEN_BOLAS : ORDEN_GEL;
+  const ORDEN_CASCARA = ["banoAgua", "banoAlg", "agua", "lactato", "hec", "gli", "pg"];
+  const orden = (rid) => rid === "spray" ? ORDEN_SPRAY : rid === "bolas" ? ORDEN_BOLAS : rid === "cascara" ? ORDEN_CASCARA : ORDEN_GEL;
   const nombreDe = (rid, k) => (rid === "spray" && k === "pg") ? "Propilenglicol" : (rid === "spray" && k === "agua") ? "Agua desmineralizada" : NOMBRES[k];
   const fmt = (n) => n.toFixed(2).replace(".", ",");
   const num = (s) => { const v = parseFloat(String(s || "").replace(",", ".")); return isNaN(v) ? null : v; };
@@ -898,6 +903,16 @@
   const guardarCalc = () => { try { localStorage.setItem("bitacora-calc", JSON.stringify(calc)); } catch (_) {} };
 
   function calcular(rid, T) {
+    if (rid === "cascara") {
+      // T = gramos de interior (gel). El baño se calcula aparte: 6 × T.
+      const B = 6 * T;
+      const r = { citL: 0, cit: 0, arg: 0, menta: 0, reserva: 0, lido: 0 };
+      r.banoAgua = B * 0.995; r.banoAlg = B * 0.005;
+      r.lactato = T * 0.02;
+      r.hec = T * P.hec; r.gli = T * P.gli; r.pg = T * P.pg;
+      r.agua = T * (236 / 252) - r.lactato;
+      return r;
+    }
     if (rid === "bolas") {
       const r = { hec: 0, citL: 0, cit: 0, arg: 0, menta: 0, reserva: 0, agua: 0, lido: 0, gli: 0, pg: 0 };
       for (const k of Object.keys(BOLAS)) r[k] = T * BOLAS[k];
@@ -924,6 +939,19 @@
   function pasos(rid, r) {
     const g = (k) => fmt(r[k]) + " g";
     const L = [];
+    if (rid === "cascara") {
+      L.push({ id: "k0", t: ["EL DÍA ANTES: el baño. Pesa ", g("banoAgua"), " de agua desmineralizada (grifo NO: su calcio gelifica el baño) y espolvorea ", g("banoAlg"), " de alginato mientras bates o licúas. Queda con grumos y burbujas: es normal."] });
+      L.push({ id: "k1", t: ["Tapa el baño y déjalo en la nevera ", "toda la noche", ". Al día siguiente estará liso y sin burbujas. Sácalo 1 h antes para que se atempere."] });
+      L.push({ id: "k2", t: ["EL INTERIOR: pesa ", g("agua"), " de agua desmineralizada y disuelve ", g("lactato"), " de lactato de calcio. Remueve hasta que quede transparente."], ref: "El calcio va dentro: esferificación inversa" });
+      L.push({ id: "k3", t: ["Haz la papilla: ", g("hec"), " de HEC + ", g("gli"), " de glicerina + ", g("pg"), " de PG. Viértela despacio sobre el agua con lactato y bate como siempre hasta que espese y no tenga grumos."], ref: "Trucos 1 y 9" });
+      L.push({ id: "k4", t: ["Deja reposar el gel ", "30 min", " tapado para que suelte las burbujas (una bola con burbuja flota torcida)."], ref: "Truco 7" });
+      L.push({ id: "k5", t: ["Con una cuchara redonda de ~5 ml, deja caer una cucharada de gel DESPACIO y a ras del baño de alginato. Pon el reloj: ", "2 minutos", "."], reloj: true });
+      L.push({ id: "k6", t: ["Sácala con la cuchara de agujeros y enjuágala en un bol de agua limpia. Haz 3 bolas así. Con una cuarta prueba ", "3 minutos", " en el baño para ver si la cáscara sale más gruesa."] });
+      L.push({ id: "k7", t: ["Prueba de cáscara: aprieta una bola con dos dedos. Apunta: revienta fácil · justo · dura. Y si salió redonda o aplastada."] });
+      L.push({ id: "k8", t: ["Guarda las demás en un frasquito cubiertas con base HEC SIN lactato. Unas en nevera y otras en ambiente. Revisa a 24 h y 7 d: arrugas, hinchazón, goteo, turbidez, olor."], ref: "Lleva agua: sin conservante es solo LAB" });
+      L.push({ id: "f1", t: ["Etiqueta «LAB · NO USAR · fecha». Guarda el lote aquí abajo y sube la foto de las bolas como seguimiento."], ref: "Regla 6" });
+      return L;
+    }
     if (rid === "bolas") {
       L.push({ id: "o0", t: ["Moldes de silicona de esferas (", "2 cm", " de diámetro ≈ 4 g por bola), limpios y SECOS. Una gota de agua en el molde estropea la bola."] });
       L.push({ id: "o1", t: ["Funde al baño María, sin que hierva el agua, ", g("cacao"), " de manteca de cacao. Tarda: es la parte dura."] });
@@ -1029,6 +1057,7 @@
     const T = Math.max(50, Math.min(20000, calc.total || 252));
     const r = calcular(calc.rid, T);
     $("#c-alerta-agua").hidden = !(calc.agua === "Grifo" && calc.rid !== "base" && calc.rid !== "spray" && calc.rid !== "bolas");
+    $("#c-total").min = calc.rid === "cascara" ? 20 : 50;
     $("#c-lido-wrap").hidden = calc.rid !== "spray";
     $("#c-nota-cit").hidden = !(calc.rid === "arg" || calc.rid === "menta");
     const filas = orden(calc.rid).filter((k) => r[k] > 0).map((k) => {
@@ -1038,7 +1067,7 @@
       const nombre = (calc.rid !== "spray" && (k === "agua" || k === "reserva")) ? NOMBRES[k].replace("Agua", "Agua " + calc.agua.toLowerCase()) : nombreDe(calc.rid, k);
       return h("tr", {}, h("td", {}, nombre), h("td", { class: "g" }, fmt(r[k])), h("td", {}, inp));
     });
-    filas.push(h("tr", { class: "total" }, h("td", {}, "Total del lote"), h("td", { class: "g" }, fmt(T)), h("td", {})));
+    filas.push(h("tr", { class: "total" }, h("td", {}, calc.rid === "cascara" ? "Total del interior (el baño va aparte: " + fmt(6 * T) + " g)" : "Total del lote"), h("td", { class: "g" }, fmt(T)), h("td", {})));
     $("#c-tabla").replaceChildren(...filas);
     $("#c-pasos").replaceChildren(...pasos(calc.rid, r).map((p) => {
       const cb = h("input", { type: "checkbox", id: "paso-" + p.id, "aria-label": "Hecho" });
@@ -1054,11 +1083,10 @@
   $("#r-" + calc.rid).checked = true;
   $("#c-total").value = calc.total; $("#c-agua").value = calc.agua; $("#c-quien").value = calc.quien; $("#c-cambio").value = calc.cambio;
   for (const rb of document.querySelectorAll("input[name=receta]")) rb.addEventListener("change", () => {
+    // Cada receta tiene su tamaño habitual; solo se cambia si el usuario no lo había tocado
+    const antes = TAM_DEFECTO[calc.rid] || 252, despues = TAM_DEFECTO[rb.value] || 252;
     calc.rid = rb.value; calc.checks = {}; calc.reales = {};
-    // El spray se hace en lotes de 100 g; los geles, de 252 g
-    const chico = rb.value === "spray" || rb.value === "bolas";
-    if (chico && calc.total === 252) calc.total = 100;
-    if (!chico && calc.total === 100) calc.total = 252;
+    if (calc.total === antes) calc.total = despues;
     $("#c-total").value = calc.total;
     guardarCalc(); renderCalc();
   });
@@ -1083,7 +1111,7 @@
     for (const k of orden(calc.rid)) {
       if (!(r[k] > 0)) continue;
       const real = num(calc.reales[k]);
-      const corto = { cacao: "manteca cacao", coco: "aceite coco", almendras: "almendras", vitE: "vit. E", aroma: "aroma", agua: "agua", alcohol: "alcohol 96°", lido: "lidocaína", citL: "cítrico (lidocaína)", reserva: "agua solución", arg: "arginina", cit: "cítrico", hec: "HEC", gli: "glicerina", pg: "PG", menta: "sol. menta" }[k];
+      const corto = { banoAgua: "baño agua", banoAlg: "alginato", lactato: "lactato Ca", cacao: "manteca cacao", coco: "aceite coco", almendras: "almendras", vitE: "vit. E", aroma: "aroma", agua: "agua", alcohol: "alcohol 96°", lido: "lidocaína", citL: "cítrico (lidocaína)", reserva: "agua solución", arg: "arginina", cit: "cítrico", hec: "HEC", gli: "glicerina", pg: "PG", menta: "sol. menta" }[k];
       partes.push(corto + " " + fmt(real ?? r[k]));
       if (real == null) sinReal.push(corto);
     }
