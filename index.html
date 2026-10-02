@@ -364,6 +364,32 @@
   .acceso-hasta { font-size: .75rem; color: var(--on-surface-variant); }
   body.bloqueada { overflow: hidden; }
 
+  /* Buzón "Pregúntale a Claude" */
+  .chat { position: fixed; inset: 0; z-index: 45; background: var(--surface); display: grid; grid-template-rows: auto 1fr auto; }
+  .chat .cab { display: flex; align-items: center; gap: 12px; padding: calc(10px + env(safe-area-inset-top, 0px)) 16px 10px; background: var(--surface-c); }
+  .chat .cab .logo { width: 40px; height: 40px; border-radius: 12px; background: #d97757; color: #fff; display: grid; place-items: center; font-weight: 700; font-size: 1.1rem; flex: none; }
+  .chat .cab .t { flex: 1; min-width: 0; display: grid; }
+  .chat .cab b { font-weight: 500; font-size: 1.1rem; }
+  .chat .cab small { color: var(--on-surface-variant); font-size: .75rem; }
+  .chat .hilo { overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 12px; max-width: 760px; width: 100%; margin: 0 auto; }
+  .chat .intro { background: var(--surface-low); border-radius: 16px; padding: 14px 16px; font-size: .9rem; color: var(--on-surface-variant); display: grid; gap: 6px; }
+  .burbuja { max-width: 88%; padding: 10px 14px; border-radius: 18px; font-size: .95rem; white-space: pre-wrap; overflow-wrap: anywhere; display: grid; gap: 6px; }
+  .burbuja.yo { align-self: flex-end; background: var(--primary-container); color: var(--on-primary-container); border-bottom-right-radius: 6px; }
+  .burbuja.claude { align-self: flex-start; background: var(--surface-high); color: var(--on-surface); border-bottom-left-radius: 6px; }
+  .burbuja.espera { align-self: flex-start; background: transparent; border: 1px dashed var(--outline); color: var(--on-surface-variant); font-size: .85rem; }
+  .burbuja small { font-size: .72rem; opacity: .75; }
+  .burbuja .fotos { display: flex; gap: 6px; flex-wrap: wrap; }
+  .burbuja .fotos img { width: 84px; height: 84px; object-fit: cover; border-radius: 10px; cursor: zoom-in; }
+  .chat .redactar { border-top: 1px solid var(--outline-variant); background: var(--surface-low); padding: 10px 16px calc(10px + env(safe-area-inset-bottom, 0px)); }
+  .chat .redactar .in { max-width: 760px; margin: 0 auto; display: grid; gap: 8px; }
+  .chat .redactar textarea { width: 100%; min-height: 64px; max-height: 40vh; resize: vertical; border: 1px solid var(--outline-variant); border-radius: 16px; padding: 10px 14px; background: var(--surface); }
+  .chat .redactar .fila { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .chat .redactar .fila .esp { flex: 1; }
+  .chat .error { color: var(--error); font-size: .85rem; }
+  .chat .error:empty { display: none; }
+  #visor { z-index: 70; }
+  #toast { z-index: 75; }
+
   @media (min-width: 641px) { .fab { display: none; } }
   @media (prefers-reduced-motion: no-preference) {
     .lote { animation: entra .3s ease both; }
@@ -386,6 +412,7 @@
       <span class="contador"><b id="c-trucos">0</b> trucos ✓</span>
     </div>
     <button class="btn tonal chico" id="btn-instalar" hidden>Instalar</button>
+    <button class="btn-candado" id="btn-claude" type="button" aria-label="Pregúntale a Claude" title="Pregúntale a Claude"><svg class="ic" viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 9h12v2H6V9zm8 5H6v-2h8v2zm4-6H6V6h12v2z"/></svg><span class="globo" id="claude-globo" hidden>0</span></button>
     <button class="btn-candado" id="btn-candado" type="button" aria-label="Cápsula de acceso" title="Cápsula de acceso"><svg class="ic" viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg><span class="globo" id="candado-globo" hidden>0</span></button>
   </div>
 </header>
@@ -568,6 +595,15 @@
 
 <button class="fab" id="fab-nuevo" type="button" hidden><svg class="ic" viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>Nuevo lote</button>
 <div class="visor" id="visor" hidden><img id="visor-img" alt=""></div>
+<div class="chat" id="chat" hidden role="dialog" aria-label="Pregúntale a Claude">
+  <div class="cab">
+    <div class="logo" aria-hidden="true">C</div>
+    <div class="t"><b>Pregúntale a Claude</b><small id="chat-sub">Buzón del laboratorio</small></div>
+    <button class="btn texto" type="button" id="chat-cerrar">Cerrar</button>
+  </div>
+  <div class="hilo" id="chat-hilo"></div>
+  <div class="redactar"><div class="in" id="chat-redactar"></div></div>
+</div>
 <div class="capsula" id="capsula" hidden aria-live="polite"></div>
 <div class="capsula" id="capsula-admin" hidden role="dialog" aria-label="Cápsula de acceso"></div>
 <div class="snack" id="toast" role="status" hidden></div>
@@ -1564,6 +1600,85 @@
     }, () => {});
   }
 
+  // --- Buzón "Pregúntale a Claude" ------------------------------------------
+  // Las preguntas se guardan en la colección "consultas". Claude las lee y responde desde el kit
+  // (en la compu) y la respuesta aparece aquí sola.
+  const CHAT = { lista: [], abierto: false, sel: null };
+  const fmtCuando = (iso) => { if (!iso) return ""; const d = new Date(iso); return fmtFecha(iso.slice(0, 10)) + " · " + fmtHora(iso); };
+  function pintaGloboChat() {
+    const visto = lsGet("bitacora-chat-visto") || "";
+    const nuevas = CHAT.lista.filter((c) => c.respondido && c.respondido > visto).length;
+    const g = $("#claude-globo"); g.hidden = !nuevas || CHAT.abierto; g.textContent = nuevas;
+  }
+  function fotosBurbuja(ids) {
+    if (!ids || !ids.length) return null;
+    return h("div", { class: "fotos" }, ...ids.map((id) => {
+      const img = h("img", { alt: "Foto", onclick: () => img.src && verFoto(img.src) });
+      fotoURL(id).then((src) => { if (src) img.src = src; else img.remove(); });
+      return img;
+    }));
+  }
+  function renderChat() {
+    const hilo = $("#chat-hilo"); hilo.replaceChildren();
+    hilo.append(h("div", { class: "intro" },
+      h("b", {}, "Cómo funciona"),
+      h("span", {}, "Escribe tu duda (con fotos si quieres). Queda guardada aquí. Claude la responde la próxima vez que abran el kit en la compu y le digan «revisa el buzón». La respuesta aparece en este mismo hilo y te sale un globito rojo en el icono de mensajes."),
+      h("span", {}, "Para algo urgente, mejor háblale en la compu.")));
+    const orden = [...CHAT.lista].sort((a, b) => (a.creado || "").localeCompare(b.creado || ""));
+    for (const c of orden) {
+      hilo.append(h("div", { class: "burbuja yo" }, c.texto || "", fotosBurbuja(c.fotos), h("small", {}, (c.autor || "") + " · " + fmtCuando(c.creado))));
+      if (c.respuesta) hilo.append(h("div", { class: "burbuja claude" }, c.respuesta, h("small", {}, "Claude · " + fmtCuando(c.respondido))));
+      else hilo.append(h("div", { class: "burbuja espera" }, "Pendiente: Claude la verá cuando abran el kit."));
+    }
+    requestAnimationFrame(() => { hilo.scrollTop = hilo.scrollHeight; });
+  }
+  function renderRedactar() {
+    const box = $("#chat-redactar"); box.replaceChildren();
+    const txt = h("textarea", { placeholder: "Escribe tu pregunta para Claude…", id: "chat-txt", "aria-label": "Pregunta" });
+    try { txt.value = sessionStorage.getItem("bitacora-chat-borrador") || ""; } catch (_) {}
+    txt.addEventListener("input", () => { try { sessionStorage.setItem("bitacora-chat-borrador", txt.value); } catch (_) {} });
+    CHAT.sel = selectorFotos("chat-f");
+    const err = h("p", { class: "error" });
+    const btn = h("button", { class: "btn", type: "button", onclick: async () => {
+      const texto = txt.value.trim();
+      if (!texto && !CHAT.sel.elegidos.length) { err.textContent = "Escribe algo o añade una foto."; return; }
+      btn.disabled = true; btn.textContent = "Enviando…"; err.textContent = "";
+      try {
+        const fotos = [];
+        for (const f of CHAT.sel.elegidos) fotos.push(await subir(f));
+        await db.collection("consultas").add({ texto, fotos, autor: lsGet("bitacora-nombre") || $("#c-quien").value.trim() || "Kike", creado: new Date().toISOString(), estado: "pendiente", respuesta: null, respondido: null });
+        try { sessionStorage.removeItem("bitacora-chat-borrador"); } catch (_) {}
+        renderRedactar(); avisar("Pregunta guardada para Claude");
+      } catch (ex) { err.textContent = mensajeError(ex); btn.disabled = false; btn.textContent = "Enviar"; }
+    } }, "Enviar");
+    box.append(txt, err, h("div", { class: "fila" }, CHAT.sel.bloque, h("span", { class: "esp" }), btn));
+  }
+  function abrirChat() {
+    CHAT.abierto = true; $("#chat").hidden = false; document.body.classList.add("bloqueada");
+    renderChat(); renderRedactar(); marcarVisto();
+  }
+  function cerrarChat() {
+    CHAT.abierto = false; $("#chat").hidden = true;
+    if ($("#capsula").hidden) document.body.classList.remove("bloqueada");
+    pintaGloboChat();
+  }
+  function marcarVisto() {
+    const ult = CHAT.lista.reduce((m, c) => (c.respondido && c.respondido > m ? c.respondido : m), "");
+    if (ult) lsSet("bitacora-chat-visto", ult);
+    pintaGloboChat();
+  }
+  function iniciarChat() {
+    $("#btn-claude").addEventListener("click", abrirChat);
+    $("#chat-cerrar").addEventListener("click", cerrarChat);
+    db.collection("consultas").onSnapshot((snap) => {
+      const antes = new Map(CHAT.lista.map((c) => [c.id, c.respondido]));
+      CHAT.lista = snap.docs.map((x) => Object.assign({ id: x.id }, x.data()));
+      const llego = CHAT.lista.some((c) => c.respondido && antes.has(c.id) && antes.get(c.id) !== c.respondido);
+      if (llego && !CHAT.abierto) { avisar("Claude respondió en el buzón"); try { if (navigator.vibrate) navigator.vibrate(120); } catch (_) {} }
+      if (CHAT.abierto) { renderChat(); marcarVisto(); } else pintaGloboChat();
+    }, () => {});
+  }
+
   // --- conexión con la base de datos ---------------------------------------
   const ordenLotes = (a, b) => (b.fecha || "").localeCompare(a.fecha || "") || (b.creado || "").localeCompare(a.creado || "");
   if (!db) {
@@ -1571,6 +1686,7 @@
   } else {
     const fallo = (e) => { const a = $("#aviso-db"); a.textContent = mensajeError(e); a.hidden = false; };
     iniciarCapsula();
+    iniciarChat();
     db.collection("lotes").onSnapshot((snap) => {
       st.lotes = snap.docs.map((x) => ({ id: x.id, ...x.data() })).sort(ordenLotes);
       contadores(); renderDiario(); renderHoy();
