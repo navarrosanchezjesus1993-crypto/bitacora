@@ -420,14 +420,6 @@
   #visor { z-index: 70; }
   #toast { z-index: 75; }
 
-  /* Vídeos */
-  .video-caja video { width: 100%; max-width: 420px; border-radius: 12px; background: #000; }
-  .previas .vid { display: inline-flex; align-items: center; gap: 6px; height: 84px; padding: 0 12px; border-radius: 12px; background: var(--surface-highest); font-size: .8rem; max-width: 100%; }
-  .grabador { z-index: 80; background: var(--scrim); backdrop-filter: blur(6px); }
-  .grabador video { width: 100%; aspect-ratio: 4 / 3; border-radius: 12px; background: #000; object-fit: cover; }
-  .grabador .fila { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
-  .grabador .cuenta { font-family: var(--mono); font-size: 1.1rem; min-width: 3ch; }
-  .grabador .btn.rec { background: var(--error); color: #fff; }
 
   @media (min-width: 641px) { .fab { display: none; } }
   @media (prefers-reduced-motion: no-preference) {
@@ -794,104 +786,9 @@
       return data;
     } catch (_) { return null; }
   }
-  // --- vídeos: cortos, sin sonido y troceados dentro de la base de datos ----
-  // Claude no puede "ver" un vídeo en movimiento: los convierte en fotogramas. Por eso se graban
-  // sin sonido, en baja resolución y de pocos segundos.
-  const TROZO = 600000, VIDEO_MAX = 12 * 1024 * 1024, VIDEO_SEG = 20;
-  const cacheVideos = new Map();
-  const leerBytes = (file) => new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(new Uint8Array(r.result)); r.onerror = rej; r.readAsArrayBuffer(file); });
-  function aBase64(bytes) { let s = ""; for (let i = 0; i < bytes.length; i += 0x8000) s += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000)); return btoa(s); }
-  function deBase64(b64) { const s = atob(b64), out = new Uint8Array(s.length); for (let i = 0; i < s.length; i++) out[i] = s.charCodeAt(i); return out; }
-  const esVideo = (f) => (f.type || "").startsWith("video/");
-  async function subirVideo(file, avance) {
-    if (file.size > VIDEO_MAX) throw { code: "video-grande" };
-    const bytes = await leerBytes(file);
-    const n = Math.ceil(bytes.length / TROZO);
-    const ref = db.collection("videos").doc();
-    for (let i = 0; i < n; i++) {
-      if (avance) avance(i + 1, n);
-      await db.doc("videoPartes/" + ref.id + "_" + i).set({ video: ref.id, i, data: aBase64(bytes.subarray(i * TROZO, (i + 1) * TROZO)) });
-    }
-    await ref.set({ tipo: file.type || "video/webm", tam: bytes.length, partes: n, nombre: file.name || "", creado: new Date().toISOString() });
-    cacheVideos.set(ref.id, URL.createObjectURL(file));
-    return ref.id;
-  }
-  async function videoURL(id) {
-    if (cacheVideos.has(id)) return cacheVideos.get(id);
-    const m = await db.doc("videos/" + id).get();
-    if (!m.exists) return null;
-    const { partes, tipo } = m.data(), trozos = [];
-    for (let i = 0; i < partes; i++) { const d = await db.doc("videoPartes/" + id + "_" + i).get(); trozos.push(deBase64(d.data().data)); }
-    const url = URL.createObjectURL(new Blob(trozos, { type: tipo || "video/webm" }));
-    cacheVideos.set(id, url);
-    return url;
-  }
-  function videoBoton(id) {
-    const caja = h("div", { class: "video-caja" });
-    const b = h("button", { class: "btn tonal chico", type: "button" }, "▶ Ver vídeo");
-    b.addEventListener("click", async () => {
-      b.disabled = true; b.textContent = "Cargando vídeo…";
-      try {
-        const u = await videoURL(id);
-        if (!u) { b.textContent = "Vídeo no disponible"; return; }
-        const v = h("video", { controls: true, playsinline: true, src: u });
-        caja.replaceChildren(v); v.play().catch(() => {});
-      } catch (_) { b.disabled = false; b.textContent = "▶ Ver vídeo"; }
-    });
-    caja.append(b);
-    return caja;
-  }
-  // Sube fotos y vídeos de un selector; devuelve { fotos, videos } con sus ids
-  async function subirTodo(archivos, progreso) {
-    const fotos = [], videos = [];
-    for (let i = 0; i < archivos.length; i++) {
-      const f = archivos[i];
-      if (esVideo(f)) videos.push(await subirVideo(f, (p, n) => progreso && progreso("Subiendo vídeo " + (i + 1) + " de " + archivos.length + " (" + p + "/" + n + ")…")));
-      else { if (progreso) progreso("Subiendo foto " + (i + 1) + " de " + archivos.length + "…"); fotos.push(await subir(f)); }
-    }
-    return { fotos, videos };
-  }
-  // Grabadora: baja resolución, sin sonido, tope de segundos
-  function grabador(alTerminar) {
-    const vid = h("video", { autoplay: true, muted: true, playsinline: true });
-    const cuenta = h("span", { class: "cuenta" }, "0 s");
-    const btn = h("button", { class: "btn", type: "button" }, "● Grabar");
-    const cerrar = h("button", { class: "btn texto", type: "button" }, "Cancelar");
-    const err = h("p", { class: "error" });
-    const ov = h("div", { class: "capsula grabador" }, h("div", { class: "tarjeta" },
-      h("h2", {}, "Grabar vídeo"),
-      h("p", {}, "Máximo " + VIDEO_SEG + " s, sin sonido y en baja resolución: así cabe en la base de datos y Claude puede verlo por fotogramas. Acerca la cámara y muévelo despacio."),
-      vid, h("div", { class: "fila" }, btn, cuenta, cerrar), err));
-    document.body.append(ov);
-    let stream = null, rec = null, timer = null, t0 = 0, trozos = [];
-    const fin = () => { clearInterval(timer); if (stream) stream.getTracks().forEach((t) => t.stop()); ov.remove(); };
-    cerrar.addEventListener("click", () => { if (rec && rec.state === "recording") { rec.onstop = null; rec.stop(); } fin(); });
-    if (!navigator.mediaDevices || !window.MediaRecorder) { err.textContent = "Este celular no puede grabar desde la app. Usa «Vídeo de la galería» (corto)."; btn.disabled = true; }
-    else navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment", width: { ideal: 640 }, height: { ideal: 480 }, frameRate: { ideal: 24 } }, audio: false })
-      .then((s) => { stream = s; vid.srcObject = s; })
-      .catch(() => { err.textContent = "No se pudo abrir la cámara. Da permiso o usa «Vídeo de la galería»."; btn.disabled = true; });
-    btn.addEventListener("click", () => {
-      if (!stream) return;
-      if (rec && rec.state === "recording") { rec.stop(); return; }
-      const tipo = ["video/mp4", "video/webm;codecs=vp9", "video/webm;codecs=vp8", "video/webm"].find((t) => MediaRecorder.isTypeSupported(t)) || "";
-      try { rec = new MediaRecorder(stream, Object.assign({ videoBitsPerSecond: 900000 }, tipo ? { mimeType: tipo } : {})); }
-      catch (_) { err.textContent = "Este celular no puede grabar desde la app. Usa «Vídeo de la galería»."; return; }
-      trozos = [];
-      rec.ondataavailable = (e) => { if (e.data && e.data.size) trozos.push(e.data); };
-      rec.onstop = () => {
-        const mime = (rec.mimeType || tipo || "video/webm").split(";")[0];
-        const f = new File(trozos, "video-" + Date.now() + (mime.includes("mp4") ? ".mp4" : ".webm"), { type: mime });
-        fin(); alTerminar(f);
-      };
-      rec.start(1000); t0 = Date.now(); btn.textContent = "■ Parar"; btn.classList.add("rec");
-      timer = setInterval(() => { const s = Math.round((Date.now() - t0) / 1000); cuenta.textContent = s + " s"; if (s >= VIDEO_SEG && rec.state === "recording") rec.stop(); }, 250);
-    });
-  }
-
   function mensajeError(ex) {
     const c = ex && ex.code;
     if (c === "formato") return "Ese archivo no es una foto. Usa JPG o PNG.";
-    if (c === "video-grande") return "El vídeo pesa más de 12 MB. Grábalo desde la app (máx. " + VIDEO_SEG + " s) o recorta uno más corto.";
     if (c === "permission-denied") return "La base de datos no deja guardar. Hay que revisar las reglas en Firebase (avísale a Claude).";
     if (c === "resource-exhausted") return "Se llenó el espacio gratuito. Avísale a Claude.";
     if (c === "unavailable") return "Sin conexión. Se guardará solo cuando vuelva la señal.";
@@ -902,28 +799,21 @@
   function selectorFotos(idBase) {
     const elegidos = [];
     const previas = h("div", { class: "previas" });
-    const aviso = h("span", { class: "error" });
-    const anadir = (f) => {
-      if (esVideo(f)) {
-        if (f.size > VIDEO_MAX) { aviso.textContent = mensajeError({ code: "video-grande" }); return; }
-        elegidos.push(f);
-        previas.append(h("span", { class: "vid" }, "🎬 " + Math.round(f.size / 1024) + " KB"));
-      } else if (f.type.startsWith("image/")) {
+    const alElegir = (e) => {
+      for (const f of e.target.files) {
+        if (!f.type.startsWith("image/")) continue;
         elegidos.push(f);
         previas.append(h("img", { src: URL.createObjectURL(f), alt: f.name }));
       }
+      e.target.value = "";
     };
-    const alElegir = (e) => { aviso.textContent = ""; for (const f of e.target.files) anadir(f); e.target.value = ""; };
     const cam = h("input", { id: idBase + "-cam", type: "file", accept: "image/*", capture: "environment", hidden: true, onchange: alElegir });
     const gal = h("input", { id: idBase + "-gal", type: "file", accept: "image/*", multiple: true, hidden: true, onchange: alElegir });
-    const vgal = h("input", { id: idBase + "-vid", type: "file", accept: "video/*", hidden: true, onchange: alElegir });
     const bloque = h("div", { style: "display:grid;gap:8px" },
       h("div", { class: "fotobtns" },
         h("label", { class: "btn tonal chico icono", for: cam.id }, icono("camara"), "Tomar foto"), cam,
-        h("label", { class: "btn tonal chico icono", for: gal.id }, icono("galeria"), "Galería"), gal,
-        h("button", { class: "btn tonal chico", type: "button", onclick: () => grabador((f) => { aviso.textContent = ""; anadir(f); }) }, "● Grabar vídeo"),
-        h("label", { class: "btn tonal chico", for: vgal.id }, "Vídeo de la galería"), vgal),
-      previas, aviso);
+        h("label", { class: "btn tonal chico icono", for: gal.id }, icono("galeria"), "Galería"), gal),
+      previas);
     return { bloque, elegidos };
   }
 
@@ -1084,8 +974,7 @@
           h("span", { class: "fecha" }, (s.semana ? "Control del lunes · semana " + s.semana : "Seguimiento") + " · " + fmtFecha(s.fecha)),
           typeof s.ph === "number" ? h("span", { class: "chip dato ph-chip" }, "pH " + String(s.ph).replace(".", ",")) : null,
           s.texto ? h("span", {}, s.texto) : null,
-          sf.length ? galeria(sf, "seguimiento") : null,
-          ...(s.videos || []).map(videoBoton));
+          sf.length ? galeria(sf, "seguimiento") : null);
       })));
     }
     if (l.seguir) card.append(bloqueControl(l));
@@ -1117,12 +1006,10 @@
       guardar.disabled = true; err.textContent = "";
       try {
         const ids = [];
-        const subido = await subirTodo(archivos, (m) => { guardar.textContent = m; });
-        ids.push(...subido.fotos);
+        for (let i = 0; i < archivos.length; i++) { guardar.textContent = "Subiendo foto " + (i + 1) + " de " + archivos.length + "…"; ids.push(await subir(archivos[i])); }
         const actual = st.lotes.find((x) => x.id === l.id) || l;
         const nueva = { fecha: hoy(), texto: txt.value.trim() };
         if (ids.length) nueva.fotos = ids;
-        if (subido.videos.length) nueva.videos = subido.videos;
         const v = parseFloat(String(inPh.value).replace(",", "."));
         if (!isNaN(v)) nueva.ph = v;
         const cambio = { seguimiento: [...(actual.seguimiento || []), nueva] };
@@ -1896,12 +1783,11 @@
     const hilo = $("#chat-hilo"); hilo.replaceChildren();
     hilo.append(h("div", { class: "intro" },
       h("b", {}, "Cómo funciona"),
-      h("span", {}, "Escribe tu duda, con fotos o un vídeo corto si quieres. Queda guardada aquí. Mientras el kit esté abierto en la compu, Claude revisa el buzón cada 3 minutos y la respuesta aparece en este mismo hilo, con un globito rojo en el icono de mensajes."),
-      h("span", {}, "Los vídeos: máximo " + VIDEO_SEG + " s, sin sonido. Claude no los ve en movimiento: los convierte en fotogramas. Acerca la cámara y muévela despacio."),
+      h("span", {}, "Escribe tu duda, con fotos si quieres. Queda guardada aquí. Mientras el kit esté abierto en la compu, Claude revisa el buzón cada 3 minutos y la respuesta aparece en este mismo hilo, con un globito rojo en el icono de mensajes."),
       h("span", {}, "Para algo urgente, mejor háblale en la compu.")));
     const orden = [...CHAT.lista].sort((a, b) => (a.creado || "").localeCompare(b.creado || ""));
     for (const c of orden) {
-      hilo.append(h("div", { class: "burbuja yo" }, c.texto || "", fotosBurbuja(c.fotos), ...(c.videos || []).map(videoBoton), h("small", {}, (c.autor || "") + " · " + fmtCuando(c.creado))));
+      hilo.append(h("div", { class: "burbuja yo" }, c.texto || "", fotosBurbuja(c.fotos), h("small", {}, (c.autor || "") + " · " + fmtCuando(c.creado))));
       if (c.respuesta) hilo.append(h("div", { class: "burbuja claude" }, c.respuesta, h("small", {}, "Claude · " + fmtCuando(c.respondido))));
       else hilo.append(h("div", { class: "burbuja espera" }, "Pendiente: Claude la verá cuando abran el kit."));
     }
@@ -1920,9 +1806,8 @@
       btn.disabled = true; btn.textContent = "Enviando…"; err.textContent = "";
       try {
         const fotos = [];
-        const subido = await subirTodo(CHAT.sel.elegidos, (m) => { btn.textContent = m; });
-        const fotos = subido.fotos, videos = subido.videos;
-        await db.collection("consultas").add({ texto, fotos, videos, autor: lsGet("bitacora-nombre") || $("#c-quien").value.trim() || "Kike", creado: new Date().toISOString(), estado: "pendiente", respuesta: null, respondido: null });
+        for (const f of CHAT.sel.elegidos) fotos.push(await subir(f));
+        await db.collection("consultas").add({ texto, fotos, autor: lsGet("bitacora-nombre") || $("#c-quien").value.trim() || "Kike", creado: new Date().toISOString(), estado: "pendiente", respuesta: null, respondido: null });
         try { sessionStorage.removeItem("bitacora-chat-borrador"); } catch (_) {}
         renderRedactar(); avisar("Pregunta guardada para Claude");
       } catch (ex) { err.textContent = mensajeError(ex); btn.disabled = false; btn.textContent = "Enviar"; }
