@@ -193,6 +193,32 @@
   .seguimiento .nota { display: grid; gap: 6px; font-size: .95rem; }
   .seguimiento .nota .fecha { font-size: .75rem; font-weight: 500; color: var(--primary); }
   .pie-lote { display: flex; gap: 8px; flex-wrap: wrap; }
+
+  /* Diario: pruebas en seguimiento / todas */
+  .vistas { display: grid; grid-template-columns: 1fr 1fr; border: 1px solid var(--outline); border-radius: 20px; overflow: hidden; }
+  .vistas button { min-height: 44px; border: 0; background: transparent; color: var(--on-surface); font-size: .875rem; font-weight: 500; display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 0 10px; }
+  .vistas button + button { border-left: 1px solid var(--outline); }
+  .vistas button[aria-pressed="true"] { background: var(--secondary-container); color: var(--on-secondary-container); }
+  .vistas .n { font-variant-numeric: tabular-nums; opacity: .8; }
+  .banda-seg { background: var(--primary-container); color: var(--on-primary-container); border-radius: 16px; padding: 14px 16px; display: grid; gap: 4px; font-size: .9rem; }
+  .banda-seg b { font-size: 1rem; font-weight: 500; }
+  .lote.seguida { outline: 2px solid var(--primary); outline-offset: -2px; }
+  .control { display: grid; gap: 10px; border-top: 1px solid var(--outline-variant); padding-top: 12px; }
+  .control .tit { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; justify-content: space-between; }
+  .control .tit b { font-weight: 500; }
+  .termo-link { display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 12px; border-radius: 14px; border: 0; background: var(--secondary-container); color: var(--on-secondary-container); font-size: .78rem; font-weight: 500; }
+  .lunes { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+  .lunes .dia { display: grid; justify-items: center; gap: 2px; padding: 8px 2px; border-radius: 12px; background: var(--surface-c); font-size: .72rem; color: var(--on-surface-variant); text-align: center; }
+  .lunes .dia b { font-size: .95rem; font-weight: 500; color: var(--on-surface); }
+  .lunes .dia.hecho { background: var(--ok-container); color: var(--on-ok-container); }
+  .lunes .dia.hecho b { color: var(--on-ok-container); }
+  .lunes .dia.toca { background: var(--warn-container); color: var(--on-warn-container); box-shadow: inset 0 0 0 2px var(--warn); }
+  .lunes .dia.toca b { color: var(--on-warn-container); }
+  .lunes .dia.tarde { background: var(--error-container); color: var(--on-error-container); }
+  .lunes .dia.tarde b { color: var(--on-error-container); }
+  .nota .ph-chip { justify-self: start; }
+  form.seg .campo-ph { display: flex; gap: 10px; align-items: center; }
+  form.seg .campo-ph input { width: 110px; }
   form.seg { display: grid; gap: 10px; background: var(--surface-c); border-radius: 12px; padding: 14px; }
   form.seg textarea { min-height: 72px; }
 
@@ -507,7 +533,11 @@
 
   <!-- DIARIO -->
   <section id="p-diario" role="tabpanel" aria-labelledby="t-diario" hidden style="display:grid;gap:16px;">
-    <div class="acciones">
+    <div class="vistas" role="group" aria-label="Qué pruebas ver">
+      <button type="button" id="v-seg" aria-pressed="true">En seguimiento <span class="n" id="v-seg-n"></span></button>
+      <button type="button" id="v-todas" aria-pressed="false">Todas las pruebas <span class="n" id="v-todas-n"></span></button>
+    </div>
+    <div class="acciones" id="diario-acciones" hidden>
       <div class="filtros" id="filtros">
         <button class="chipfiltro" aria-pressed="true" data-f="todos">Todos</button>
         <button class="chipfiltro" aria-pressed="false" data-f="bien">Salió bien</button>
@@ -669,7 +699,8 @@
     return s;
   }
 
-  const st = { lotes: [], trucos: [], reglas: [], compras: [], avances: [], filtro: "todos", q: "", abiertoSeg: null, segTipo: null };
+  const st = { lotes: [], trucos: [], reglas: [], compras: [], avances: [], filtro: "todos", q: "", abiertoSeg: null, segTipo: null, segSemana: null, vista: "seg" };
+  try { if (localStorage.getItem("bitacora-vista") === "todas") st.vista = "todas"; } catch (_) {}
   const PANELES = ["lote", "diario", "avance", "compras", "trucos", "reglas"];
   function avisar(txt) {
     const t = $("#toast"); t.textContent = txt; t.hidden = false;
@@ -812,10 +843,69 @@
     const txt = [l.titulo, l.cambio, l.pesos, l.resultado, l.leccion, l.quien, l.agua, ...(l.seguimiento || []).map((s) => s.texto)].join(" ").toLowerCase();
     return txt.includes(st.q);
   }
+  // Pruebas en seguimiento: lotes con "seguir" = { avance, desde (primer lunes), semanas }.
+  // Cada lunes toca un control semanal; se guarda en el seguimiento del lote con "semana".
+  const MS_DIA = 864e5;
+  const seguidas = () => st.lotes.filter((l) => l.seguir).sort((a, b) => (a.seguir.orden || 9) - (b.seguir.orden || 9));
+  function lunesDe(l) {
+    const s = l.seguir || {}; if (!s.desde) return [];
+    const [y, m, d] = s.desde.split("-").map(Number);
+    return Array.from({ length: s.semanas || 5 }, (_, i) => {
+      const f = new Date(y, m - 1, d + 7 * i);
+      const iso = f.getFullYear() + "-" + String(f.getMonth() + 1).padStart(2, "0") + "-" + String(f.getDate()).padStart(2, "0");
+      return { n: i + 1, iso, fecha: f };
+    });
+  }
+  function estadoLunes(l) {
+    const hechos = new Set((l.seguimiento || []).filter((s) => s.semana).map((s) => s.semana));
+    const hoyIso = hoy();
+    return lunesDe(l).map((x) => ({ ...x, hecho: hechos.has(x.n), estado: hechos.has(x.n) ? "hecho" : x.iso === hoyIso ? "toca" : x.iso < hoyIso ? "tarde" : "futuro" }));
+  }
+  function pendienteLunes(l) { return estadoLunes(l).find((x) => x.estado === "toca" || x.estado === "tarde") || null; }
+  const DIAS_CORTOS = ["dom", "lun", "mar", "mié", "jue", "vie", "sáb"];
+  function bloqueControl(l) {
+    const dias = estadoLunes(l);
+    const av = st.avances.find((a) => a.id === (l.seguir || {}).avance);
+    let pctAv = null;
+    if (av) { const e = av.etapas || []; pctAv = Math.round(100 * e.filter((x) => x.hecho).length / (e.length || 1)); }
+    const pend = pendienteLunes(l);
+    const prox = dias.find((x) => x.estado === "futuro");
+    const hechos = dias.filter((x) => x.hecho).length;
+    return h("div", { class: "control" },
+      h("div", { class: "tit" },
+        h("b", {}, "Controles de los lunes · " + hechos + " de " + dias.length),
+        av ? h("button", { class: "termo-link", type: "button", onclick: () => { irA("avance"); const el = document.getElementById("avance-" + av.id); if (el) el.scrollIntoView({ behavior: "smooth", block: "start" }); } },
+          "Termómetro: " + (av.nombre || av.id).split("(")[0].trim() + " · " + pctAv + " %") : null),
+      h("div", { class: "lunes" }, dias.map((x) => h("div", { class: "dia " + x.estado, title: x.estado },
+        h("span", {}, "Sem " + x.n), h("b", {}, x.fecha.getDate() + " " + MESES[x.fecha.getMonth()]),
+        h("span", {}, x.estado === "hecho" ? "✓ hecho" : x.estado === "toca" ? "hoy" : x.estado === "tarde" ? "atrasado" : "lunes")))),
+      pend && db && st.abiertoSeg !== l.id ? h("button", { class: "btn chico", type: "button", onclick: () => { st.abiertoSeg = l.id; st.segTipo = null; st.segSemana = pend.n; renderDiario(); } },
+        "Anotar control del lunes " + pend.fecha.getDate() + " " + MESES[pend.fecha.getMonth()]) :
+        (!pend && prox ? h("span", { class: "fecha" }, "Próximo control: lunes " + prox.fecha.getDate() + " " + MESES[prox.fecha.getMonth()]) : null),
+      !pend && !prox ? h("span", { class: "fecha" }, "Mes de seguimiento terminado.") : null);
+  }
+  function pintaVistas() {
+    const nSeg = seguidas().length;
+    $("#v-seg-n").textContent = "(" + nSeg + ")";
+    $("#v-todas-n").textContent = "(" + (st.lotes.length - nSeg) + ")";
+    $("#v-seg").setAttribute("aria-pressed", String(st.vista === "seg"));
+    $("#v-todas").setAttribute("aria-pressed", String(st.vista !== "seg"));
+    $("#diario-acciones").hidden = st.vista === "seg";
+  }
   function renderDiario() {
     const cont = $("#diario");
     cont.replaceChildren();
-    const lista = st.lotes.filter(coincide);
+    pintaVistas();
+    if (st.vista === "seg") {
+      const ls = seguidas();
+      cont.append(h("div", { class: "banda-seg" },
+        h("b", {}, "Estas " + ls.length + " pruebas son las que mueven el termómetro"),
+        h("span", {}, "Renzo las sigue un mes entero. Cada lunes se abre un control nuevo en cada una: pH, transparencia, cristales, espesor y olor, con foto. El resto de pruebas está en «Todas las pruebas».")));
+      if (!ls.length) cont.append(h("p", { class: "vacio" }, "No hay pruebas marcadas para seguimiento."));
+      for (const l of ls) cont.append(tarjetaLote(l));
+      return;
+    }
+    const lista = st.lotes.filter((l) => !l.seguir).filter(coincide);
     if (!lista.length) {
       cont.append(h("p", { class: "vacio" }, st.lotes.length ? "Ningún lote coincide con el filtro." : "Todavía no hay lotes apuntados."));
       return;
@@ -839,7 +929,7 @@
     fila("Agua", l.agua);
     fila("Qué pasó", l.resultado);
     const fotos = (l.fotos || []);
-    const card = h("article", { class: "lote", "data-estado": est, id: "lote-" + l.id },
+    const card = h("article", { class: "lote" + (l.seguir ? " seguida" : ""), "data-estado": est, id: "lote-" + l.id },
       h("div", { class: "cab" },
         h("h3", {}, l.titulo || "Lote sin nombre"),
         h("span", { class: "chip " + est }, ESTADOS[est])),
@@ -853,15 +943,17 @@
       card.append(h("div", { class: "seguimiento" }, segs.map((s) => {
         const sf = fotosDeSeg(s);
         return h("div", { class: "nota" },
-          h("span", { class: "fecha" }, "Seguimiento · " + fmtFecha(s.fecha)),
+          h("span", { class: "fecha" }, (s.semana ? "Control del lunes · semana " + s.semana : "Seguimiento") + " · " + fmtFecha(s.fecha)),
+          typeof s.ph === "number" ? h("span", { class: "chip dato ph-chip" }, "pH " + String(s.ph).replace(".", ",")) : null,
           s.texto ? h("span", {}, s.texto) : null,
           sf.length ? galeria(sf, "seguimiento") : null);
       })));
     }
+    if (l.seguir) card.append(bloqueControl(l));
     if (db) {
       if (st.abiertoSeg === l.id) card.append(formSeguimiento(l));
       else card.append(h("div", { class: "pie-lote" },
-        h("button", { class: "btn tonal chico icono", type: "button", onclick: () => { st.abiertoSeg = l.id; renderDiario(); } }, icono("mas"), "Seguimiento (24 h, 7 días…)")));
+        h("button", { class: "btn tonal chico icono", type: "button", onclick: () => { st.abiertoSeg = l.id; st.segTipo = null; st.segSemana = null; renderDiario(); } }, icono("mas"), l.seguir ? "Otra nota (fuera del lunes)" : "Seguimiento (24 h, 7 días…)")));
     }
     return card;
   }
@@ -869,11 +961,17 @@
     const txt = h("textarea", { id: "seg-txt-" + l.id, placeholder: "Ej.: A las 24 h sigue transparente, sin grumos, olor a menta suave", "aria-label": "Nota de seguimiento" });
     const sel = selectorFotos("seg-" + l.id);
     const err = h("span", { class: "error", role: "alert" });
-    const guardar = h("button", { class: "btn chico", type: "submit" }, "Guardar seguimiento");
-    const f = h("form", { class: "seg" }, txt, sel.bloque,
+    const semana = st.segSemana || null;
+    const guardar = h("button", { class: "btn chico", type: "submit" }, semana ? "Guardar control de la semana " + semana : "Guardar seguimiento");
+    const inPh = semana ? h("input", { type: "number", step: "0.01", min: "0", max: "14", inputmode: "decimal", placeholder: "Ej. 5,71", "aria-label": "pH medido" }) : null;
+    const f = h("form", { class: "seg" },
+      semana ? h("b", {}, "Control del lunes · semana " + semana) : null,
+      semana ? h("div", { class: "campo-ph" }, h("span", {}, "pH medido"), inPh, h("span", { class: "fecha" }, "vacío si no se midió")) : null,
+      txt, sel.bloque,
       h("div", { class: "pie-form" }, guardar,
-        h("button", { class: "btn texto chico", type: "button", onclick: () => { st.abiertoSeg = null; st.segTipo = null; renderDiario(); } }, "Cancelar"), err));
+        h("button", { class: "btn texto chico", type: "button", onclick: () => { st.abiertoSeg = null; st.segTipo = null; st.segSemana = null; renderDiario(); } }, "Cancelar"), err));
     if (st.segTipo) txt.placeholder = "Revisión de las " + (st.segTipo === "h24" ? "24 horas" : "7 días") + ": transparencia, espesor, grumos, puntitos, olor…";
+    if (semana) txt.placeholder = "Transparencia, cristales, espesor, olor, color… Compáralo con el lunes anterior.";
     f.addEventListener("submit", async (e) => {
       e.preventDefault();
       const archivos = sel.elegidos;
@@ -885,10 +983,15 @@
         const actual = st.lotes.find((x) => x.id === l.id) || l;
         const nueva = { fecha: hoy(), texto: txt.value.trim() };
         if (ids.length) nueva.fotos = ids;
+        if (semana) {
+          nueva.semana = semana;
+          const v = parseFloat(String(inPh.value).replace(",", "."));
+          if (!isNaN(v)) nueva.ph = v;
+        }
         const cambio = { seguimiento: [...(actual.seguimiento || []), nueva] };
         if (st.segTipo && actual.revisiones) cambio["revisiones." + st.segTipo] = true;
         await db.doc("lotes/" + l.id).update(cambio);
-        st.abiertoSeg = null; st.segTipo = null; renderDiario();
+        st.abiertoSeg = null; st.segTipo = null; st.segSemana = null; renderDiario();
         avisar("Seguimiento guardado");
       } catch (ex) {
         err.textContent = mensajeError(ex); guardar.disabled = false; guardar.textContent = "Guardar seguimiento";
@@ -928,16 +1031,21 @@
         items.push({ l, k, nombre, falta });
       }
     }
+    for (const l of seguidas()) {
+      const p = pendienteLunes(l); if (!p) continue;
+      items.push({ l, k: null, semana: p.n, nombre: "control del lunes (semana " + p.n + ")", falta: p.estado === "toca" ? 0 : -(Date.now() - p.fecha.getTime()) });
+    }
     items.sort((a, b) => a.falta - b.falta);
     panel.hidden = !items.length;
-    ul.replaceChildren(...items.map(({ l, k, nombre, falta }) => {
+    ul.replaceChildren(...items.map(({ l, k, semana, nombre, falta }) => {
       const tarde = falta <= 0, hrs = Math.round(Math.abs(falta) / HORA);
-      const cuando = tarde ? (hrs < 1 ? "toca ahora" : "toca desde hace " + hrs + " h") : "en " + Math.max(1, hrs) + " h";
+      const cuando = semana ? (falta === 0 ? "toca hoy" : "atrasado " + Math.max(1, Math.round(-falta / MS_DIA)) + " d") : tarde ? (hrs < 1 ? "toca ahora" : "toca desde hace " + hrs + " h") : "en " + Math.max(1, hrs) + " h";
       return h("li", {},
-        h("span", {}, h("b", {}, l.titulo || "Lote"), " · revisión " + nombre),
+        h("span", {}, h("b", {}, l.titulo || "Lote"), " · " + (semana ? "" : "revisión ") + nombre),
         h("span", { style: "display:flex;gap:10px;align-items:center;flex-wrap:wrap" },
           h("span", { class: "cuando" + (tarde ? " tarde" : "") }, cuando),
           h("button", { class: "btn chico", type: "button", onclick: () => {
+            st.vista = l.seguir ? "seg" : "todas"; st.segSemana = semana || null;
             st.abiertoSeg = l.id; st.segTipo = k; st.filtro = "todos"; st.q = ""; $("#buscar").value = "";
             for (const x of document.querySelectorAll(".chipfiltro")) x.setAttribute("aria-pressed", String(x.dataset.f === "todos"));
             irA("diario"); renderDiario();
@@ -978,6 +1086,12 @@
           a.estado ? h("span", { class: "chip " + (a.estado === "comercial" ? "bien" : a.estado === "prototipo" ? "regular" : "dato") }, a.estado) : null,
           ph.nivel ? h("span", { class: "chip ph-" + ph.nivel }, PH_NIVEL[ph.nivel] || "pH") : null,
           a.actualizado ? h("span", {}, "actualizado " + fmtFecha(a.actualizado)) : null),
+        (() => {
+          const ps = st.lotes.filter((l) => l.seguir && l.seguir.avance === a.id);
+          if (!ps.length) return null;
+          return h("p", { class: "siguiente" }, h("b", {}, "Se mide con: "), ...ps.map((l, i) => [i ? ", " : "",
+            h("a", { href: "#lote-" + l.id, onclick: (e) => { e.preventDefault(); st.vista = "seg"; irA("diario"); renderDiario(); const el = document.getElementById("lote-" + l.id); if (el) el.scrollIntoView({ behavior: "smooth", block: "start" }); } }, l.titulo || "prueba")]));
+        })(),
         sig ? h("p", { class: "siguiente" }, h("b", {}, "Siguiente: "), sig.texto) : h("p", { class: "siguiente" }, h("b", {}, "Completa.")),
         ph.texto ? h("p", { class: "ph-texto" }, ph.texto) : null,
         h("details", {}, h("summary", {}, "Ver todos los pasos"), lista)));
@@ -1295,6 +1409,10 @@
     renderDiario();
   });
   let tBusca;
+  for (const [id, v] of [["#v-seg", "seg"], ["#v-todas", "todas"]]) $(id).addEventListener("click", () => {
+    st.vista = v; try { localStorage.setItem("bitacora-vista", v); } catch (_) {}
+    renderDiario();
+  });
   $("#buscar").addEventListener("input", (e) => { clearTimeout(tBusca); tBusca = setTimeout(() => { st.q = e.target.value.trim().toLowerCase(); renderDiario(); }, 150); });
 
   // --- formulario de lote -----------------------------------------------
@@ -1689,12 +1807,12 @@
     iniciarChat();
     db.collection("lotes").onSnapshot((snap) => {
       st.lotes = snap.docs.map((x) => ({ id: x.id, ...x.data() })).sort(ordenLotes);
-      contadores(); renderDiario(); renderHoy();
+      contadores(); renderDiario(); renderHoy(); renderAvances();
     }, fallo);
     db.collection("compras").onSnapshot((snap) => { st.compras = snap.docs.map((x) => ({ id: x.id, ...x.data() })); renderCompras(); }, fallo);
     db.collection("trucos").orderBy("n").onSnapshot((snap) => { st.trucos = snap.docs.map((x) => ({ id: x.id, ...x.data() })); contadores(); renderTrucos(); }, fallo);
     db.collection("reglas").orderBy("n").onSnapshot((snap) => { st.reglas = snap.docs.map((x) => ({ id: x.id, ...x.data() })); renderReglas(); }, fallo);
-    db.collection("avance").orderBy("n").onSnapshot((snap) => { st.avances = snap.docs.map((x) => ({ id: x.id, ...x.data() })); renderAvances(); }, fallo);
+    db.collection("avance").orderBy("n").onSnapshot((snap) => { st.avances = snap.docs.map((x) => ({ id: x.id, ...x.data() })); renderAvances(); renderDiario(); }, fallo);
   }
 })();
 </script>
