@@ -203,6 +203,10 @@
   .banda-seg { background: var(--primary-container); color: var(--on-primary-container); border-radius: 16px; padding: 14px 16px; display: grid; gap: 4px; font-size: .9rem; }
   .banda-seg b { font-size: 1rem; font-weight: 500; }
   .lote.seguida { outline: 2px solid var(--primary); outline-offset: -2px; }
+  .lote.semanal { margin-left: 14px; }
+  .etiqueta-serie { justify-self: start; font-size: .72rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--primary); }
+  .linea-tit { font-size: 1.15rem; margin-top: 10px; }
+  .serie-banda { background: var(--primary-container); color: var(--on-primary-container); border-radius: 12px; padding: 12px 14px; display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; justify-content: space-between; font-size: .9rem; }
   .control { display: grid; gap: 10px; border-top: 1px solid var(--outline-variant); padding-top: 12px; }
   .control .tit { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; justify-content: space-between; }
   .control .tit b { font-weight: 500; }
@@ -477,6 +481,7 @@
 
   <!-- HACER UN LOTE -->
   <section id="p-lote" role="tabpanel" aria-labelledby="t-lote" style="display:grid;gap:18px;">
+    <div class="serie-banda" id="c-serie" hidden><span id="c-serie-txt"></span><button class="btn texto chico" type="button" id="c-serie-quitar">No es la mezcla semanal</button></div>
     <div class="recetas" role="radiogroup" aria-label="Qué vas a hacer">
       <label class="receta"><input type="radio" name="receta" value="base" id="r-base"><b>Base sola</b><span>Agua, HEC, glicerina y PG. La prueba n.º 9.</span></label>
       <label class="receta"><input type="radio" name="receta" value="arg" id="r-arg" checked><b>Base + L-arginina</b><span>Arginina al 0,5 % con el cítrico dentro de su solución.</span></label>
@@ -856,10 +861,24 @@
       return { n: i + 1, iso, fecha: f };
     });
   }
+  // Mezclas semanales: lotes con serie = id de la prueba de partida y semana = n
+  const mezclasDe = (l) => st.lotes.filter((x) => x.serie === l.id).sort((a, b) => (a.semana || 0) - (b.semana || 0));
   function estadoLunes(l) {
-    const hechos = new Set((l.seguimiento || []).filter((s) => s.semana).map((s) => s.semana));
+    const hechos = new Set(mezclasDe(l).map((x) => x.semana));
     const hoyIso = hoy();
     return lunesDe(l).map((x) => ({ ...x, hecho: hechos.has(x.n), estado: hechos.has(x.n) ? "hecho" : x.iso === hoyIso ? "toca" : x.iso < hoyIso ? "tarde" : "futuro" }));
+  }
+  const planDe = (l, n) => ((l.seguir || {}).planes || {})[String(n)] || "El cambio de esta semana sale del resultado de la anterior. Pregúntale a Claude por el buzón.";
+  // Abre la calculadora con la receta de la línea y el cambio de la semana
+  function hacerMezcla(l, n) {
+    const s = l.seguir || {};
+    if (!s.receta || !RECETAS[s.receta]) { avisar("Esta prueba no tiene receta en la calculadora"); return; }
+    calc.rid = s.receta; calc.total = s.total || TAM_DEFECTO[s.receta] || 252;
+    if (s.lidoPct) calc.lidoPct = s.lidoPct;
+    calc.checks = {}; calc.reales = {};
+    calc.cambio = "Semana " + n + ": " + planDe(l, n);
+    calc.serie = { id: l.id, semana: n, nombre: s.nombre || l.titulo || "" };
+    guardarCalc(); prepararCalc(); irA("lote");
   }
   function pendienteLunes(l) { return estadoLunes(l).find((x) => x.estado === "toca" || x.estado === "tarde") || null; }
   const DIAS_CORTOS = ["dom", "lun", "mar", "mié", "jue", "vie", "sáb"];
@@ -871,23 +890,25 @@
     const pend = pendienteLunes(l);
     const prox = dias.find((x) => x.estado === "futuro");
     const hechos = dias.filter((x) => x.hecho).length;
+    const sigN = pend ? pend.n : prox ? prox.n : null;
     return h("div", { class: "control" },
       h("div", { class: "tit" },
-        h("b", {}, "Controles de los lunes · " + hechos + " de " + dias.length),
+        h("b", {}, "Mezcla nueva cada lunes · " + hechos + " de " + dias.length),
         av ? h("button", { class: "termo-link", type: "button", onclick: () => { irA("avance"); const el = document.getElementById("avance-" + av.id); if (el) el.scrollIntoView({ behavior: "smooth", block: "start" }); } },
           "Termómetro: " + (av.nombre || av.id).split("(")[0].trim() + " · " + pctAv + " %") : null),
       h("div", { class: "lunes" }, dias.map((x) => h("div", { class: "dia " + x.estado, title: x.estado },
         h("span", {}, "Sem " + x.n), h("b", {}, x.fecha.getDate() + " " + MESES[x.fecha.getMonth()]),
-        h("span", {}, x.estado === "hecho" ? "✓ hecho" : x.estado === "toca" ? "hoy" : x.estado === "tarde" ? "atrasado" : "lunes")))),
-      pend && db && st.abiertoSeg !== l.id ? h("button", { class: "btn chico", type: "button", onclick: () => { st.abiertoSeg = l.id; st.segTipo = null; st.segSemana = pend.n; renderDiario(); } },
-        "Anotar control del lunes " + pend.fecha.getDate() + " " + MESES[pend.fecha.getMonth()]) :
-        (!pend && prox ? h("span", { class: "fecha" }, "Próximo control: lunes " + prox.fecha.getDate() + " " + MESES[prox.fecha.getMonth()]) : null),
+        h("span", {}, x.estado === "hecho" ? "✓ hecha" : x.estado === "toca" ? "hoy" : x.estado === "tarde" ? "atrasada" : "lunes")))),
+      sigN ? h("p", { class: "siguiente" }, h("b", {}, "Semana " + sigN + ": "), planDe(l, sigN)) : null,
+      pend && db ? h("button", { class: "btn chico", type: "button", onclick: () => hacerMezcla(l, pend.n) },
+        "Hacer la mezcla del lunes " + pend.fecha.getDate() + " " + MESES[pend.fecha.getMonth()]) :
+        (!pend && prox ? h("span", { class: "fecha" }, "Próxima mezcla: lunes " + prox.fecha.getDate() + " " + MESES[prox.fecha.getMonth()]) : null),
       !pend && !prox ? h("span", { class: "fecha" }, "Mes de seguimiento terminado.") : null);
   }
   function pintaVistas() {
     const nSeg = seguidas().length;
     $("#v-seg-n").textContent = "(" + nSeg + ")";
-    $("#v-todas-n").textContent = "(" + (st.lotes.length - nSeg) + ")";
+    $("#v-todas-n").textContent = "(" + st.lotes.filter((l) => !l.seguir && !l.serie).length + ")";
     $("#v-seg").setAttribute("aria-pressed", String(st.vista === "seg"));
     $("#v-todas").setAttribute("aria-pressed", String(st.vista !== "seg"));
     $("#diario-acciones").hidden = st.vista === "seg";
@@ -899,13 +920,18 @@
     if (st.vista === "seg") {
       const ls = seguidas();
       cont.append(h("div", { class: "banda-seg" },
-        h("b", {}, "Estas " + ls.length + " pruebas son las que mueven el termómetro"),
-        h("span", {}, "Renzo las sigue un mes entero. Cada lunes se abre un control nuevo en cada una: pH, transparencia, cristales, espesor y olor, con foto. El resto de pruebas está en «Todas las pruebas».")));
+        h("b", {}, "Estas " + ls.length + " fórmulas son las que mueven el termómetro"),
+        h("span", {}, "Renzo las sigue un mes entero: cada lunes se hace una mezcla nueva de cada una, con un solo cambio respecto a la semana anterior. Debajo de cada prueba de partida van sus mezclas semanales. El resto de pruebas está en «Todas las pruebas».")));
       if (!ls.length) cont.append(h("p", { class: "vacio" }, "No hay pruebas marcadas para seguimiento."));
-      for (const l of ls) cont.append(tarjetaLote(l));
+      for (const l of ls) {
+        cont.append(h("h2", { class: "linea-tit" }, (l.seguir && l.seguir.nombre) || l.titulo || "Prueba"));
+        cont.append(tarjetaLote(l, "Punto de partida"));
+        const ms = mezclasDe(l).reverse();
+        for (const m of ms) cont.append(tarjetaLote(m, "Semana " + m.semana));
+      }
       return;
     }
-    const lista = st.lotes.filter((l) => !l.seguir).filter(coincide);
+    const lista = st.lotes.filter((l) => !l.seguir && !l.serie).filter(coincide);
     if (!lista.length) {
       cont.append(h("p", { class: "vacio" }, st.lotes.length ? "Ningún lote coincide con el filtro." : "Todavía no hay lotes apuntados."));
       return;
@@ -920,7 +946,7 @@
       return b;
     }));
   }
-  function tarjetaLote(l) {
+  function tarjetaLote(l, etiqueta) {
     const est = ESTADOS[l.estado] ? l.estado : "dato";
     const filas = [];
     const fila = (k, v, mono) => v ? filas.push(h("div", { class: "fila-dato" }, h("dt", {}, k), h("dd", { class: mono ? "mono" : null }, v))) : null;
@@ -929,7 +955,8 @@
     fila("Agua", l.agua);
     fila("Qué pasó", l.resultado);
     const fotos = (l.fotos || []);
-    const card = h("article", { class: "lote" + (l.seguir ? " seguida" : ""), "data-estado": est, id: "lote-" + l.id },
+    const card = h("article", { class: "lote" + (l.seguir ? " seguida" : "") + (l.serie ? " semanal" : ""), "data-estado": est, id: "lote-" + l.id },
+      etiqueta ? h("span", { class: "etiqueta-serie" }, etiqueta) : null,
       h("div", { class: "cab" },
         h("h3", {}, l.titulo || "Lote sin nombre"),
         h("span", { class: "chip " + est }, ESTADOS[est])),
@@ -961,17 +988,16 @@
     const txt = h("textarea", { id: "seg-txt-" + l.id, placeholder: "Ej.: A las 24 h sigue transparente, sin grumos, olor a menta suave", "aria-label": "Nota de seguimiento" });
     const sel = selectorFotos("seg-" + l.id);
     const err = h("span", { class: "error", role: "alert" });
-    const semana = st.segSemana || null;
-    const guardar = h("button", { class: "btn chico", type: "submit" }, semana ? "Guardar control de la semana " + semana : "Guardar seguimiento");
-    const inPh = semana ? h("input", { type: "number", step: "0.01", min: "0", max: "14", inputmode: "decimal", placeholder: "Ej. 5,71", "aria-label": "pH medido" }) : null;
+    const semana = null;
+    const guardar = h("button", { class: "btn chico", type: "submit" }, "Guardar seguimiento");
+    const inPh = h("input", { type: "number", step: "0.01", min: "0", max: "14", inputmode: "decimal", placeholder: "Ej. 5,71", "aria-label": "pH medido" });
     const f = h("form", { class: "seg" },
-      semana ? h("b", {}, "Control del lunes · semana " + semana) : null,
-      semana ? h("div", { class: "campo-ph" }, h("span", {}, "pH medido"), inPh, h("span", { class: "fecha" }, "vacío si no se midió")) : null,
+      h("div", { class: "campo-ph" }, h("span", {}, "pH medido"), inPh, h("span", { class: "fecha" }, "vacío si no se midió")),
       txt, sel.bloque,
       h("div", { class: "pie-form" }, guardar,
         h("button", { class: "btn texto chico", type: "button", onclick: () => { st.abiertoSeg = null; st.segTipo = null; st.segSemana = null; renderDiario(); } }, "Cancelar"), err));
     if (st.segTipo) txt.placeholder = "Revisión de las " + (st.segTipo === "h24" ? "24 horas" : "7 días") + ": transparencia, espesor, grumos, puntitos, olor…";
-    if (semana) txt.placeholder = "Transparencia, cristales, espesor, olor, color… Compáralo con el lunes anterior.";
+    if (l.serie) txt.placeholder = "Transparencia, cristales, espesor, olor, color… Compáralo con la semana anterior.";
     f.addEventListener("submit", async (e) => {
       e.preventDefault();
       const archivos = sel.elegidos;
@@ -983,11 +1009,8 @@
         const actual = st.lotes.find((x) => x.id === l.id) || l;
         const nueva = { fecha: hoy(), texto: txt.value.trim() };
         if (ids.length) nueva.fotos = ids;
-        if (semana) {
-          nueva.semana = semana;
-          const v = parseFloat(String(inPh.value).replace(",", "."));
-          if (!isNaN(v)) nueva.ph = v;
-        }
+        const v = parseFloat(String(inPh.value).replace(",", "."));
+        if (!isNaN(v)) nueva.ph = v;
         const cambio = { seguimiento: [...(actual.seguimiento || []), nueva] };
         if (st.segTipo && actual.revisiones) cambio["revisiones." + st.segTipo] = true;
         await db.doc("lotes/" + l.id).update(cambio);
@@ -1033,7 +1056,7 @@
     }
     for (const l of seguidas()) {
       const p = pendienteLunes(l); if (!p) continue;
-      items.push({ l, k: null, semana: p.n, nombre: "control del lunes (semana " + p.n + ")", falta: p.estado === "toca" ? 0 : -(Date.now() - p.fecha.getTime()) });
+      items.push({ l, k: null, semana: p.n, nombre: "mezcla nueva del lunes (semana " + p.n + ")", falta: p.estado === "toca" ? 0 : -(Date.now() - p.fecha.getTime()) });
     }
     items.sort((a, b) => a.falta - b.falta);
     panel.hidden = !items.length;
@@ -1041,11 +1064,12 @@
       const tarde = falta <= 0, hrs = Math.round(Math.abs(falta) / HORA);
       const cuando = semana ? (falta === 0 ? "toca hoy" : "atrasado " + Math.max(1, Math.round(-falta / MS_DIA)) + " d") : tarde ? (hrs < 1 ? "toca ahora" : "toca desde hace " + hrs + " h") : "en " + Math.max(1, hrs) + " h";
       return h("li", {},
-        h("span", {}, h("b", {}, l.titulo || "Lote"), " · " + (semana ? "" : "revisión ") + nombre),
+        h("span", {}, h("b", {}, (semana && l.seguir.nombre) || l.titulo || "Lote"), " · " + (semana ? "" : "revisión ") + nombre),
         h("span", { style: "display:flex;gap:10px;align-items:center;flex-wrap:wrap" },
           h("span", { class: "cuando" + (tarde ? " tarde" : "") }, cuando),
+          semana ? h("button", { class: "btn chico", type: "button", onclick: () => hacerMezcla(l, semana) }, "Hacer la mezcla") :
           h("button", { class: "btn chico", type: "button", onclick: () => {
-            st.vista = l.seguir ? "seg" : "todas"; st.segSemana = semana || null;
+            st.vista = (l.seguir || l.serie) ? "seg" : "todas"; st.segSemana = null;
             st.abiertoSeg = l.id; st.segTipo = k; st.filtro = "todos"; st.q = ""; $("#buscar").value = "";
             for (const x of document.querySelectorAll(".chipfiltro")) x.setAttribute("aria-pressed", String(x.dataset.f === "todos"));
             irA("diario"); renderDiario();
@@ -1349,11 +1373,25 @@
       return li;
     }));
   }
+  function pintaSerie() {
+    const s = calc.serie;
+    $("#c-serie").hidden = !s;
+    if (s) $("#c-serie-txt").textContent = "Mezcla semanal · " + (s.nombre || "") + " · semana " + s.semana + ". Al guardar, queda en su serie.";
+  }
+  function prepararCalc() {
+    $("#r-" + calc.rid).checked = true;
+    $("#c-total").value = calc.total; $("#c-agua").value = calc.agua; $("#c-quien").value = calc.quien; $("#c-cambio").value = calc.cambio;
+    $("#c-lido").value = String(calc.lidoPct);
+    pintaSerie(); renderCalc();
+  }
+  $("#c-serie-quitar").addEventListener("click", () => { calc.serie = null; calc.cambio = ""; $("#c-cambio").value = ""; guardarCalc(); pintaSerie(); });
   $("#r-" + calc.rid).checked = true;
   $("#c-total").value = calc.total; $("#c-agua").value = calc.agua; $("#c-quien").value = calc.quien; $("#c-cambio").value = calc.cambio;
+  pintaSerie();
   for (const rb of document.querySelectorAll("input[name=receta]")) rb.addEventListener("change", () => {
     // Cada receta tiene su tamaño habitual; solo se cambia si el usuario no lo había tocado
     const antes = TAM_DEFECTO[calc.rid] || 252, despues = TAM_DEFECTO[rb.value] || 252;
+    if (calc.serie) { calc.serie = null; pintaSerie(); }
     calc.rid = rb.value; calc.checks = {}; calc.reales = {};
     if (calc.total === antes) calc.total = despues;
     $("#c-total").value = calc.total;
@@ -1388,16 +1426,20 @@
     if (sinReal.length) pesos += "\nSin peso real apuntado (se usó el teórico): " + sinReal.join(", ");
     btn.disabled = true; err.textContent = "";
     try {
+      const serie = calc.serie;
+      const extra = serie ? { serie: serie.id, semana: serie.semana } : {};
       await db.collection("lotes").doc().set({
-        fecha: hoy(), quien: calc.quien.trim(), titulo: RECETAS[calc.rid] + (calc.rid === "spray" ? " " + String(calc.lidoPct).replace(".", ",") + " %" : "") + " · " + fmt(T).replace(",00", "") + " g",
+        ...extra,
+        fecha: hoy(), quien: calc.quien.trim(), titulo: (serie ? "Semana " + serie.semana + " · " : "") + RECETAS[calc.rid] + (calc.rid === "spray" ? " " + String(calc.lidoPct).replace(".", ",") + " %" : "") + " · " + fmt(T).replace(",00", "") + " g",
         cambio: calc.cambio.trim(), pesos, agua: calc.agua, ph: null, resultado: "", estado: "dato", leccion: "",
         fotos: [], seguimiento: [], revisiones: { h24: false, d7: false }, receta: calc.rid, total: T,
         pasosHechos: Object.keys(calc.checks).filter((k) => calc.checks[k]).length,
         creado: new Date().toISOString()
       });
-      calc.checks = {}; calc.reales = {}; calc.cambio = ""; $("#c-cambio").value = ""; guardarCalc(); renderCalc();
-      avisar("Lote guardado. Te avisaré a las 24 h y a los 7 días.");
-      irA("diario");
+      calc.checks = {}; calc.reales = {}; calc.cambio = ""; calc.serie = null; $("#c-cambio").value = ""; guardarCalc(); pintaSerie(); renderCalc();
+      avisar(serie ? "Mezcla de la semana " + serie.semana + " guardada en su serie. Te avisaré a las 24 h y a los 7 días." : "Lote guardado. Te avisaré a las 24 h y a los 7 días.");
+      if (serie) st.vista = "seg";
+      irA("diario"); renderDiario();
     } catch (ex) { err.textContent = mensajeError(ex); }
     finally { btn.disabled = false; }
   });
