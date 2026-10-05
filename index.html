@@ -121,6 +121,7 @@
   .chipfiltro[aria-pressed="true"] { background: var(--secondary-container); color: var(--on-secondary-container); border-color: transparent; }
   .chipfiltro[aria-pressed="true"]::before { content: "✓"; font-size: .8rem; }
   .chip { display: inline-flex; align-items: center; height: 24px; padding: 0 10px; border-radius: 8px; font-size: .75rem; font-weight: 500; white-space: nowrap; }
+  select.chip-sel { border: 0; cursor: pointer; appearance: none; -webkit-appearance: none; padding-right: 22px; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23555' d='M7 10l5 5 5-5z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 2px center; background-size: 18px; }
   .chip.bien, .chip.ok { background: var(--ok-container); color: var(--on-ok-container); }
   .chip.regular, .chip.probar { background: var(--warn-container); color: var(--on-warn-container); }
   .chip.mal, .chip.cuidado { background: var(--error-container); color: var(--on-error-container); }
@@ -949,6 +950,19 @@
       return b;
     }));
   }
+  // Chip de estado que se puede cambiar tocándolo (Dato → Salió bien / Regular / Salió mal)
+  function selectorEstado(l, est) {
+    if (!db) return h("span", { class: "chip " + est }, ESTADOS[est]);
+    const sel = h("select", { class: "chip chip-sel " + est, "aria-label": "Cómo salió el lote" },
+      ...Object.keys(ESTADOS).map((k) => h("option", { value: k }, ESTADOS[k])));
+    sel.value = est;
+    sel.addEventListener("change", async () => {
+      const nuevo = sel.value;
+      try { await db.doc("lotes/" + l.id).update({ estado: nuevo }); avisar("Lote marcado como «" + ESTADOS[nuevo] + "»"); }
+      catch (ex) { sel.value = est; avisar(mensajeError(ex)); }
+    });
+    return sel;
+  }
   function tarjetaLote(l, etiqueta) {
     const est = ESTADOS[l.estado] ? l.estado : "dato";
     const filas = [];
@@ -962,7 +976,7 @@
       etiqueta ? h("span", { class: "etiqueta-serie" }, etiqueta) : null,
       h("div", { class: "cab" },
         h("h3", {}, l.titulo || "Lote sin nombre"),
-        h("span", { class: "chip " + est }, ESTADOS[est])),
+        selectorEstado(l, est)),
       h("span", { class: "fecha" }, fmtFecha(l.fecha) + (l.quien ? " · " + l.quien : "")),
       filas.length ? h("dl", { class: "filas" }, filas) : null,
       typeof l.ph === "number" ? tira(l.ph) : null,
