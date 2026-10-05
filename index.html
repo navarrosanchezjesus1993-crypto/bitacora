@@ -487,16 +487,16 @@
       <label class="receta"><input type="radio" name="receta" value="base" id="r-base"><b>Base sola</b><span>Agua, HEC, glicerina y PG. La prueba n.º 9.</span></label>
       <label class="receta"><input type="radio" name="receta" value="arg" id="r-arg" checked><b>Base + L-arginina</b><span>Arginina al 0,5 % con el cítrico dentro de su solución.</span></label>
       <label class="receta"><input type="radio" name="receta" value="menta" id="r-menta"><b>Base + arginina + menta</b><span>Lo anterior más la solución madre de menta (1 gota / 5 kg).</span></label>
-      <label class="receta"><input type="radio" name="receta" value="anal" id="r-anal"><b>Anal: base + lidocaína</b><span>7,5 g de lidocaína base por cada 250 g, disuelta con cítrico en proporción exacta en el agua antes de la HEC (método Prueba María). Sin arginina.</span></label>
-      <label class="receta"><input type="radio" name="receta" value="spray" id="r-spray"><b>Spray retardante</b><span>Lidocaína al 5 % en alcohol 96°, PG, glicerina y agua. Sin HEC, sin cítrico y sin medir pH.</span></label>
-      <label class="receta"><input type="radio" name="receta" value="cascara" id="r-cascara"><b>Bolas con cáscara</b><span>Esferificación inversa: base HEC con lactato de calcio por dentro, baño de alginato por fuera. La cáscara se rompe al apretar.</span></label>
+      <label class="receta"><input type="radio" name="receta" value="anal" id="r-anal"><b>Anal: base + lidocaína</b><span>7,0 g de lidocaína base por cada 250 g, disuelta con 0,40 g de cítrico por gramo en el agua antes de la HEC (método Prueba María, pH 5,71 en Angélica). Sin arginina.</span></label>
+      <label class="receta"><input type="radio" name="receta" value="spray" id="r-spray"><b>Spray retardante</b><span>V0.2: lidocaína al 10 % en alcohol 96°, PG y glicerina, SIN agua (como los comerciales). Sin HEC, sin cítrico y sin medir pH.</span></label>
+      <label class="receta"><input type="radio" name="receta" value="cascara" id="r-cascara"><b>Bolas con cáscara</b><span>V0.2, cáscara más gruesa: gel HEC con 3 % de lactato de calcio (añadido al final), congelado en moldes, baño de alginato al 1 %. Serie de tiempos 5–20 min.</span></label>
       <label class="receta"><input type="radio" name="receta" value="bolas" id="r-bolas"><b>Bolas que se derriten</b><span>Base de manteca de cacao, aceite de coco y almendras. Se funde al calor del cuerpo. Sin agua.</span></label>
     </div>
     <div class="ajustes">
       <div class="campo"><label for="c-total">Tamaño del lote (g)</label><input id="c-total" type="number" min="50" max="20000" step="1" value="252" inputmode="numeric"></div>
       <div class="campo"><label for="c-agua">Agua</label><select id="c-agua"><option>Destilada</option><option>Desmineralizada</option><option>Grifo</option><option>Hervida</option><option>De mesa</option></select></div>
       <div class="campo"><label for="c-quien">Quién lo hace</label><input id="c-quien" list="personas" placeholder="Kike"></div>
-      <div class="campo" id="c-lido-wrap" hidden><label for="c-lido">Lidocaína (%)</label><select id="c-lido"><option value="5">5 % (V0.1)</option><option value="7.5">7,5 %</option><option value="10">10 % (como los comerciales)</option></select></div>
+      <div class="campo" id="c-lido-wrap" hidden><label for="c-lido">Lidocaína (%)</label><select id="c-lido"><option value="5">5 % (V0.1, con agua)</option><option value="10">10 % (V0.2, sin agua)</option><option value="13">13 % (como el de 13 %)</option></select></div>
       <button class="btn outl" type="button" id="c-reset">Empezar de nuevo</button>
     </div>
     <p class="alerta-agua" id="c-alerta-agua" hidden>Agua del grifo: su calcio forma cristalitos con arginina y cítrico, y gelifica el baño de alginato (truco 10). Usa destilada o desmineralizada.</p>
@@ -506,7 +506,7 @@
         <thead><tr><th>Ingrediente</th><th class="g">Pesar (g)</th><th>Peso real</th></tr></thead>
         <tbody id="c-tabla"></tbody>
       </table></div>
-      <p class="ayuda" id="c-nota-cit" hidden>El cítrico de la tabla es solo la dosis de arranque: el total se decide con el pH-metro (paso «Mide el pH»). Con el saco actual, la cuenta teórica da un gel demasiado ácido.</p>
+      <p class="ayuda" id="c-nota-cit" hidden>El cítrico de la tabla (0,80 g por 250 g) es solo la dosis de arranque: el total se decide con el pH-metro (paso «Mide el pH»). Datos: con 0,50 g el gel quedó en pH 6,76; con ~1 g, en 3,6–3,8. El objetivo 4,3–4,5 está en medio.</p>
     </div>
     <div class="seccion">
       <h2>Paso a paso</h2>
@@ -1167,44 +1167,48 @@
   // Proporciones de la base n.º 9 (252 g) y de los añadidos, en fracción del lote.
   // Cítrico para la arginina: dosis INICIAL baja (0,40 g por g); se completa con el pH-metro.
   // Lidocaína: 7,5 g por 250 g; cítrico 0,41 g por g (1 citrato por 2 lidocaínas → pH ≈ 5,6 teórico).
-  const P = { hec: 3.5 / 252, gli: 8.75 / 252, pg: 3.75 / 252, reserva: 20 / 252, arg: 0.005, cit: 0.005 * 0.40, menta: 0.004, lido: 7.5 / 250, citL: (7.5 / 250) * 0.41 };
-  // Spray retardante (por 100 g): alcohol 96° 30 · PG 35 · glicerina 10 · lidocaína + agua = 25.
-  // Al subir la lidocaína (5 → 7,5 → 10 %) se quita la misma cantidad de agua, así el resto no cambia.
-  const SPRAY = { alcohol: 0.30, pg: 0.35, gli: 0.10 };
+  // Anal: 7 g de lidocaína por 250 g (decisión de Renzo, 5/10) con 0,40 g de cítrico por g (Angélica: pH 5,71).
+  // Arginina: 0,80 g de cítrico de arranque por 250 g (con 0,50 g el pH quedó en 6,76; con ~1 g, en 3,6–3,8); el total lo fija el pH-metro.
+  const P = { hec: 3.5 / 252, gli: 8.75 / 252, pg: 3.75 / 252, reserva: 20 / 252, arg: 0.005, cit: 0.80 / 250, menta: 0.004, lido: 7 / 250, citL: (7 / 250) * 0.40 };
+  // Spray retardante V0.2 (por 100 g): SIN AGUA, como los comerciales. Alcohol 96° 30 · glicerina 10 · lidocaína + PG = 60.
+  // Al subir la lidocaína (5 → 10 → 13 %) se quita la misma cantidad de PG, así el resto no cambia.
+  const SPRAY = { alcohol: 0.30, gli: 0.10 };
   // Bolas que se derriten V0.1 (por 100 g, ~25 bolas de 4 g): cacao 58 · coco 20 · almendras 20 · vitamina E 1 · aroma 1.
   const BOLAS = { cacao: 0.58, coco: 0.20, almendras: 0.20, vitE: 0.01, aroma: 0.01 };
   // Bolas con cáscara V0.1: interior = base n.º 9 con 2 % de lactato de calcio; baño = 6 veces el interior, alginato al 0,5 %.
   const RECETAS = { base: "Base sola", arg: "Base + L-arginina", menta: "Base + arginina + menta", anal: "Anal: base + lidocaína", spray: "Spray retardante", bolas: "Bolas que se derriten", cascara: "Bolas con cáscara" };
-  const TAM_DEFECTO = { spray: 100, bolas: 100, cascara: 50 };
+  const TAM_DEFECTO = { spray: 100, bolas: 100, cascara: 100 };
   const NOMBRES = {
-    banoAgua: "Baño: agua desmineralizada", banoAlg: "Baño: alginato de sodio", lactato: "Lactato de calcio (en el agua, antes de la HEC)",
+    banoAgua: "Baño: agua desmineralizada", banoAlg: "Baño: alginato de sodio", lactato: "Lactato de calcio (disuelto aparte, al final)",
     cacao: "Manteca de cacao", coco: "Aceite de coco", almendras: "Aceite de almendras dulces", vitE: "Vitamina E (tocoferol)", aroma: "Aroma oleosoluble",
     lido: "Lidocaína base", citL: "Ácido cítrico para la lidocaína (inicial)", alcohol: "Alcohol etílico 96°",
     agua: "Agua (vaso principal)", reserva: "Agua (para disolver el activo)", arg: "L-arginina",
     cit: "Ácido cítrico (dosis inicial)", hec: "HEC (Cellosize QP100)", gli: "Glicerina", pg: "Propilenglicol (para la papilla)", menta: "Solución madre de menta"
   };
   const ORDEN_GEL = ["agua", "lido", "citL", "reserva", "arg", "cit", "hec", "gli", "pg", "menta"];
-  const ORDEN_SPRAY = ["alcohol", "lido", "pg", "gli", "agua"];
+  const ORDEN_SPRAY = ["alcohol", "lido", "pg", "gli"];
   const ORDEN_BOLAS = ["cacao", "coco", "almendras", "vitE", "aroma"];
-  const ORDEN_CASCARA = ["banoAgua", "banoAlg", "agua", "lactato", "hec", "gli", "pg"];
+  const ORDEN_CASCARA = ["banoAgua", "banoAlg", "agua", "hec", "gli", "pg", "reserva", "lactato"];
   const orden = (rid) => rid === "spray" ? ORDEN_SPRAY : rid === "bolas" ? ORDEN_BOLAS : rid === "cascara" ? ORDEN_CASCARA : ORDEN_GEL;
-  const nombreDe = (rid, k) => (rid === "spray" && k === "pg") ? "Propilenglicol" : (rid === "spray" && k === "agua") ? "Agua desmineralizada" : NOMBRES[k];
+  const nombreDe = (rid, k) => (rid === "spray" && k === "pg") ? "Propilenglicol" : (rid === "cascara" && k === "agua") ? "Agua desmineralizada (para el gel)" : (rid === "cascara" && k === "reserva") ? "Agua desmineralizada tibia (para el lactato)" : NOMBRES[k];
   const fmt = (n) => n.toFixed(2).replace(".", ",");
   const num = (s) => { const v = parseFloat(String(s || "").replace(",", ".")); return isNaN(v) ? null : v; };
 
-  let calc = { rid: "arg", total: 252, agua: "Destilada", quien: "", cambio: "", checks: {}, reales: {}, lidoPct: 5 };
+  let calc = { rid: "arg", total: 252, agua: "Destilada", quien: "", cambio: "", checks: {}, reales: {}, lidoPct: 10 };
   try { const g = JSON.parse(localStorage.getItem("bitacora-calc") || "null"); if (g && RECETAS[g.rid]) calc = Object.assign(calc, g); } catch (_) {}
   const guardarCalc = () => { try { localStorage.setItem("bitacora-calc", JSON.stringify(calc)); } catch (_) {} };
 
   function calcular(rid, T) {
     if (rid === "cascara") {
       // T = gramos de interior (gel). El baño se calcula aparte: 6 × T.
+      // V0.2 (5/10, cáscara más gruesa): baño al 1 % de alginato y 3 % de lactato de calcio, disuelto aparte y añadido al gel ya espeso.
       const B = 6 * T;
-      const r = { citL: 0, cit: 0, arg: 0, menta: 0, reserva: 0, lido: 0 };
-      r.banoAgua = B * 0.995; r.banoAlg = B * 0.005;
-      r.lactato = T * 0.02;
+      const r = { citL: 0, cit: 0, arg: 0, menta: 0, lido: 0 };
+      r.banoAgua = B * 0.99; r.banoAlg = B * 0.01;
+      r.lactato = T * 0.03;
+      r.reserva = T * 0.30;
       r.hec = T * P.hec; r.gli = T * P.gli; r.pg = T * P.pg;
-      r.agua = T * (236 / 252) - r.lactato;
+      r.agua = T - r.hec - r.gli - r.pg - r.lactato - r.reserva;
       return r;
     }
     if (rid === "bolas") {
@@ -1215,9 +1219,10 @@
     if (rid === "spray") {
       const r = { hec: 0, citL: 0, cit: 0, arg: 0, menta: 0, reserva: 0 };
       for (const k of Object.keys(SPRAY)) r[k] = T * SPRAY[k];
-      const pct = Math.max(1, Math.min(12, parseFloat(calc.lidoPct) || 5)) / 100;
+      const pct = Math.max(1, Math.min(15, parseFloat(calc.lidoPct) || 10)) / 100;
       r.lido = T * pct;
-      r.agua = T * (0.25 - pct);
+      r.pg = T * (0.60 - pct);
+      r.agua = 0;
       return r;
     }
     const conArg = rid === "arg" || rid === "menta", conMenta = rid === "menta", conLido = rid === "anal";
@@ -1236,12 +1241,12 @@
     if (rid === "cascara") {
       L.push({ id: "k0", t: ["EL DÍA ANTES: el baño. Pesa ", g("banoAgua"), " de agua desmineralizada (grifo NO: su calcio gelifica el baño) y espolvorea ", g("banoAlg"), " de alginato mientras bates o licúas. Queda con grumos y burbujas: es normal."] });
       L.push({ id: "k1", t: ["Tapa el baño y déjalo en la nevera ", "toda la noche", ". Al día siguiente estará liso y sin burbujas. Sácalo 1 h antes para que se atempere."] });
-      L.push({ id: "k2", t: ["EL INTERIOR: pesa ", g("agua"), " de agua desmineralizada y disuelve ", g("lactato"), " de lactato de calcio. Remueve hasta que quede transparente."], ref: "El calcio va dentro: esferificación inversa" });
-      L.push({ id: "k3", t: ["Haz la papilla: ", g("hec"), " de HEC + ", g("gli"), " de glicerina + ", g("pg"), " de PG. Viértela despacio sobre el agua con lactato y bate como siempre hasta que espese y no tenga grumos."], ref: "Trucos 1 y 9" });
-      L.push({ id: "k4", t: ["Deja reposar el gel ", "30 min", " tapado para que suelte las burbujas (una bola con burbuja flota torcida)."], ref: "Truco 7" });
-      L.push({ id: "k5", t: ["Con una cuchara redonda de ~5 ml, deja caer una cucharada de gel DESPACIO y a ras del baño de alginato. Pon el reloj: ", "2 minutos", "."], reloj: true });
-      L.push({ id: "k6", t: ["Sácala con la cuchara de agujeros y enjuágala en un bol de agua limpia. Haz 3 bolas así. Con una cuarta prueba ", "3 minutos", " en el baño para ver si la cáscara sale más gruesa."] });
-      L.push({ id: "k7", t: ["Prueba de cáscara: aprieta una bola con dos dedos. Apunta: revienta fácil · justo · dura. Y si salió redonda o aplastada."] });
+      L.push({ id: "k2", t: ["EL INTERIOR, primero el gel SIN calcio: pesa ", g("agua"), " de agua desmineralizada en el vaso. Haz la papilla con ", g("hec"), " de HEC + ", g("gli"), " de glicerina + ", g("pg"), " de PG, viértela despacio y bate como siempre hasta que espese."], ref: "El lactato antes de la HEC impide que espese (lote del 2/10)" });
+      L.push({ id: "k3", t: ["Aparte: disuelve ", g("lactato"), " de lactato de calcio en ", g("reserva"), " de agua desmineralizada TIBIA. Remueve 3 min; mira a contraluz: sin granitos."], ref: "El calcio va dentro: esferificación inversa" });
+      L.push({ id: "k4", t: ["Cuando el gel esté espeso, añade el agua con lactato en 3 partes, removiendo despacio 1 min cada vez. Reposo ", "30 min", " tapado para que suelte las burbujas."], ref: "Truco 7" });
+      L.push({ id: "k5", t: ["Llena moldes de silicona de media esfera (1,5–2 cm) con el gel y CONGELA mínimo ", "3 horas", " (mejor toda la noche). Así salen redondas."], ref: "Idea de Renzo: bola congelada = esfera perfecta" });
+      L.push({ id: "k6", t: ["Echa las bolas congeladas al baño a temperatura ambiente, en un recipiente hondo (≥ 5 cm de baño). Dales la vuelta a mitad de tiempo. Saca una a ", "5, 10, 15 y 20 min", "."], reloj: true });
+      L.push({ id: "k7", t: ["Enjuaga cada una en agua limpia y ponla en un plato 5 min. Foto de las 4 en fila con su tiempo. Apunta cuál aguanta redonda y cómo revienta al apretar: fácil · justo · dura."] });
       L.push({ id: "k8", t: ["Guarda las demás en un frasquito cubiertas con base HEC SIN lactato. Unas en nevera y otras en ambiente. Revisa a 24 h y 7 d: arrugas, hinchazón, goteo, turbidez, olor."], ref: "Lleva agua: sin conservante es solo LAB" });
       L.push({ id: "f1", t: ["Etiqueta «LAB · NO USAR · fecha». Guarda el lote aquí abajo y sube la foto de las bolas como seguimiento."], ref: "Regla 6" });
       return L;
@@ -1261,9 +1266,9 @@
     if (rid === "spray") {
       L.push({ id: "p0", t: ["Ponte guantes y trabaja lejos de fuego o cocina: el alcohol es inflamable. Usa un frasco de vidrio o PET con tapa."] });
       L.push({ id: "p1", t: ["Pesa ", g("alcohol"), " de alcohol etílico de 96° en el frasco."], ref: "Si el alcohol fuera de 70°, avisa: trae 30 % de agua y cambia la fórmula" });
-      L.push({ id: "p2", t: ["Añade ", g("lido"), " de lidocaína base y agita. Se disuelve en pocos minutos y queda transparente. Aquí NO va ácido cítrico."], ref: calc.lidoPct > 5 ? "Al " + String(calc.lidoPct).replace(".", ",") + " %: si al final queda turbio, el agua es el límite. Anótalo y en el siguiente lote se baja el agua" : null });
-      L.push({ id: "p3", t: ["Añade ", g("pg"), " de propilenglicol y ", g("gli"), " de glicerina. Agita hasta que quede uniforme."] });
-      L.push({ id: "p4", t: ["Añade el agua POCO A POCO: ", g("agua"), " en total, agitando. Si en algún momento se enturbia, para y apunta cuánta agua entró: ese es el límite."], ref: "Lo turbio es lidocaína que ya no cabe disuelta" });
+      L.push({ id: "p2", t: ["Añade ", g("lido"), " de lidocaína base y agita. Se disuelve en pocos minutos y queda transparente. Aquí NO va ácido cítrico."], ref: "Al " + String(calc.lidoPct).replace(".", ",") + " %: los comerciales van al 9,6–13 %" });
+      L.push({ id: "p3", t: ["Añade ", g("pg"), " de propilenglicol y ", g("gli"), " de glicerina. Agita hasta que quede uniforme. ESTA VERSIÓN NO LLEVA AGUA: en V0.1 el agua fue el límite (puntitos a los 9 g) y los sprays comerciales tampoco llevan."], ref: "Etiquetas del 5/10: lidocaína + alcohol + aceite ligero, sin agua" });
+      L.push({ id: "p4", t: ["Mira a contraluz: tiene que estar transparente del todo. Si ves turbidez o puntitos, apúntalo: sería el PG el que no la aguanta."], ref: "Lo turbio es lidocaína que ya no cabe disuelta" });
       L.push({ id: "p5", t: ["Pásalo al frasco con pulverizador. Pésalo lleno, da ", "10 pulsaciones", " sobre un papel y vuelve a pesarlo. La diferencia ÷ 10 es lo que sale por disparo. Apúntalo en el lote."], ref: "Al " + String(calc.lidoPct).replace(".", ",") + " %, cada 0,10 g por disparo = " + (calc.lidoPct * 10).toFixed(0) + " mg de lidocaína" });
       L.push({ id: "p6", t: ["Prueba de escozor SOLO en el antebrazo: un disparo, espera 5 min, apunta si pica (0 nada · 1 leve · 2 claro · 3 fuerte) y cuánto tarda en secarse."], ref: "Ningún lote LAB se prueba en genitales" });
       L.push({ id: "p7", t: ["Separa ", "10 g", " en un frasquito a la nevera. Revisa cristales a 24 h y 7 días, en ambiente y en nevera."] });
@@ -1274,7 +1279,7 @@
     if (rid === "anal") {
       L.push({ id: "l0", t: ["Ponte guantes. Pesa ", g("agua"), " de agua en el vaso principal (nada de grifo). Puedes entibiarla, sin pasar de ", "~50 °C", ": ayuda a disolver más rápido."], ref: "Truco 10" });
       L.push({ id: "l1", t: ["Echa ", g("lido"), " de lidocaína base al agua y remueve. No se disuelve todavía: es normal."] });
-      L.push({ id: "l2", t: ["Añade ", g("citL"), " de ácido cítrico, PESADO EXACTO, y remueve hasta que se disuelva (unos minutos). Esa proporción deja el pH solo en ~5,6. No añadas más salvo que quede polvo después de enfriar."], ref: "Truco 11: proporción exacta" });
+      L.push({ id: "l2", t: ["Añade ", g("citL"), " de ácido cítrico, PESADO EXACTO, y remueve hasta que se disuelva (unos minutos). Esa proporción (0,40 g por g de lidocaína) dio pH 5,71 en Angélica. No añadas más salvo que quede polvo después de enfriar."], ref: "Truco 11: proporción exacta" });
       L.push({ id: "l3", t: ["Mide el pH del agua. Objetivo ", "5,5–6,5", ". Si está por debajo, te pasaste de cítrico: anótalo y sigue, sin corregir."], ref: "pH-metro calibrado" });
       L.push({ id: "b2", t: ["Haz la papilla: ", g("hec"), " de HEC + ", g("gli"), " de glicerina + ", g("pg"), " de PG. Mezcla hasta que no quede polvo seco."] });
       L.push({ id: "b3", t: ["Vierte la papilla despacio sobre el agua con lidocaína, removiendo sin hacer remolino."], ref: "Trucos 1 y 7" });
