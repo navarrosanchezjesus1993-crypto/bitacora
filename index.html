@@ -507,7 +507,7 @@
       <label class="receta"><input type="radio" name="receta" value="base" id="r-base"><b>Base sola</b><span>Agua, HEC, glicerina y PG. La prueba n.º 9. Con benzoato.</span></label>
       <label class="receta"><input type="radio" name="receta" value="arg" id="r-arg" checked><b>Base + L-arginina</b><span>Arginina al 0,5 % con el cítrico dentro de su solución. Con benzoato.</span></label>
       <label class="receta"><input type="radio" name="receta" value="menta" id="r-menta"><b>Base + arginina + menta</b><span>Lo anterior más la solución madre de menta (1 gota / 5 kg).</span></label>
-      <label class="receta"><input type="radio" name="receta" value="anal" id="r-anal"><b>Anal: base + lidocaína</b><span>Lidocaína al 5 % (5 g por 100 g), disuelta con cítrico (0,36–0,40 g por gramo) en el agua tibia antes de la HEC. Con benzoato. Sin arginina.</span></label>
+      <label class="receta"><input type="radio" name="receta" value="anal" id="r-anal"><b>Anal: base + lidocaína</b><span>Lidocaína al 7 % (7 g por 100 g; prueba de laboratorio), disuelta con cítrico (0,36–0,40 g por gramo) en el agua tibia antes de la HEC. Con benzoato. Sin arginina.</span></label>
       <label class="receta"><input type="radio" name="receta" value="spray" id="r-spray"><b>Spray retardante</b><span>Lidocaína (5 → 10 %) en alcohol 96°, PG, glicerina y agua. Sin HEC, sin cítrico y sin medir pH.</span></label>
       <label class="receta"><input type="radio" name="receta" value="cascara" id="r-cascara"><b>Bolas con cáscara</b><span>V0.2, cáscara más gruesa: gel HEC con 3 % de lactato de calcio (añadido al final), congelado en moldes, baño de alginato al 1 %. Serie de tiempos 5–20 min.</span></label>
       <label class="receta"><input type="radio" name="receta" value="bolas" id="r-bolas"><b>Bolas que se derriten</b><span>Base de manteca de cacao, aceite de coco y almendras. Se funde al calor del cuerpo. Sin agua.</span></label>
@@ -1248,8 +1248,9 @@
   // Anal: 7 g de lidocaína por 250 g (decisión de Renzo, 5/10) con 0,40 g de cítrico por g (Angélica: pH 5,71).
   // Arginina: 0,80 g de cítrico de arranque por 250 g (con 0,50 g el pH quedó en 6,76; con ~1 g, en 3,6–3,8); el total lo fija el pH-metro.
   // Anal (Renzo, 5/10 tarde): lidocaína al 5 % (5 g por 100 g). Cítrico de arranque 0,36 g/g (1,80 g) y hasta 0,40 g/g (2,00 g) si queda capa.
+  // Anal (Kike, 12/10): lidocaína al 7 % (7 g por 100 g), prueba de laboratorio. Cítrico de arranque 0,36 g/g (2,52 g) y hasta 0,40 g/g (2,80 g).
   // Benzoato de sodio al 0,1 % (0,10 g por 100 g) en todos los geles (Renzo, 5/10): disuelto en el agua antes de todo.
-  const P = { hec: 3.5 / 252, gli: 8.75 / 252, pg: 3.75 / 252, reserva: 20 / 252, arg: 0.005, cit: 0.80 / 250, menta: 0.004, lido: 0.05, citL: 0.05 * 0.36, benz: 0.001 };
+  const P = { hec: 3.5 / 252, gli: 8.75 / 252, pg: 3.75 / 252, reserva: 20 / 252, arg: 0.005, cit: 0.80 / 250, menta: 0.004, lido: 0.07, citL: 0.07 * 0.36, benz: 0.001 };
   // Spray retardante (por 100 g): alcohol 96° 30 · PG 35 · glicerina 10 · lidocaína + agua = 25.
   // Al subir la lidocaína (5 → 7,5 → 10 %) se quita la misma cantidad de agua, así el resto no cambia. (Renzo, 5/10: se mantiene esta fórmula.)
   const SPRAY = { alcohol: 0.30, pg: 0.35, gli: 0.10 };
@@ -1358,11 +1359,11 @@
     }
     if (rid === "menta") L.push({ id: "m0", t: ["¿Tienes la solución madre de menta? Si no: ", "1 gota", " de menta en ", "20,00 g", " de PG, en frasco ámbar. Agita hasta que quede transparente. Si sale turbia, no la uses."], ref: "Truco 6" });
     if (rid === "anal") {
-      L.push({ id: "l0", t: ["Ponte guantes. Pesa ", g("agua"), " de agua en el vaso principal (nada de grifo) y disuelve ", g("benz"), " de benzoato de sodio. Entibia el agua al baño María, sin pasar de ", "50 °C", ": al 5 % la lidocaína tarda mucho en entrar si está fría."], ref: "Truco 10 · lote del 5/10: capa en superficie hasta calentar" });
+      L.push({ id: "l0", t: ["Ponte guantes. Pesa ", g("agua"), " de agua en el vaso principal (nada de grifo) y disuelve ", g("benz"), " de benzoato de sodio. Entibia el agua al baño María, sin pasar de ", "50 °C", ": al 7 % la lidocaína tarda aún más en entrar si está fría."], ref: "Truco 10 · lote del 5/10: capa en superficie hasta calentar" });
       L.push({ id: "l1", t: ["Echa ", g("lido"), " de lidocaína base al agua y remueve. Flota y se pega al vidrio: es normal, todavía no es sal."] });
-      L.push({ id: "l2", t: ["Añade ", g("citL"), " de ácido cítrico, PESADO EXACTO (0,36 g por gramo de lidocaína), y remueve 10–15 min raspando las paredes, con el vaso en el baño tibio."], ref: "Con 0,40 g/g el lote al 2,8 % quedó en pH 5,18: se arranca un poco más bajo para no pasarse" });
-      L.push({ id: "l2b", t: ["Si a los 15 min aún queda capa o polvo, añade cítrico de ", "0,05 g", " en 0,05 g (tope ", fmt(r.lido * 0.04) + " g", " más) hasta que esté transparente. Apunta el cítrico total en «Peso real»."], ref: "Tope = 0,40 g por gramo de lidocaína" });
-      L.push({ id: "l3", t: ["Mide el pH del agua. Objetivo ", "5,5–6,5", ". Si está por debajo, no corrijas: anótalo y sigue."], ref: "pH-metro calibrado" });
+      L.push({ id: "l2", t: ["Añade ", g("citL"), " de ácido cítrico, PESADO EXACTO (0,36 g por gramo de lidocaína), y remueve 15 min raspando las paredes, con el vaso en el baño tibio. Al 7 % tarda: no juzgues antes de los 15 min."], ref: "Con 0,40 g/g el lote al 2,8 % quedó en pH 5,18: se arranca un poco más bajo para no pasarse" });
+      L.push({ id: "l2b", t: ["Si a los 15 min aún queda capa o polvo, añade cítrico de ", "0,10 g", " en 0,10 g (tope ", fmt(r.lido * 0.04) + " g", " más) hasta que esté transparente. Apunta el cítrico total en «Peso real»."], ref: "Tope = 0,40 g por gramo de lidocaína" });
+      L.push({ id: "l3", t: ["Mide el pH del agua. Objetivo ", "5,5–6,5", ". Si está por debajo, no corrijas: anótalo y sigue. Si baja de ", "5,0", ", para y consulta antes de seguir."], ref: "pH-metro calibrado · al 7 % puede quedar por debajo de 5" });
       L.push({ id: "b2", t: ["Haz la papilla: ", g("hec"), " de HEC + ", g("gli"), " de glicerina + ", g("pg"), " de PG. Mezcla hasta que no quede polvo seco."] });
       L.push({ id: "b3", t: ["Vierte la papilla despacio sobre el agua con lidocaína, removiendo sin hacer remolino."], ref: "Trucos 1 y 7" });
       L.push({ id: "b4", t: ["Bate igual que siempre. En agua algo ácida tarda un poco más: espera ", "~10 minutos", " a que espese."], ref: "Prueba María", reloj: true });
