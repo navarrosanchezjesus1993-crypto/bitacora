@@ -1484,7 +1484,7 @@
     $("#c-total").value = String(calc.total).replace(".", ",");
     guardarCalc(); renderCalc();
   });
-  $("#c-total").addEventListener("change", (e) => { calc.total = Math.max(1, Math.min(20000, parseFloat(String(e.target.value).replace(",", ".")) || 252)); e.target.value = String(calc.total).replace(".", ","); calc.reales = {}; guardarCalc(); renderCalc(); });
+  $("#c-total").addEventListener("change", (e) => { calc.total = Math.max(1, Math.min(200000, parseFloat(String(e.target.value).replace(",", ".")) || 252)); e.target.value = String(calc.total).replace(".", ","); calc.reales = {}; guardarCalc(); renderCalc(); });
   $("#c-agua").addEventListener("change", (e) => { calc.agua = e.target.value; guardarCalc(); renderCalc(); });
   $("#c-lido").value = String(calc.lidoPct);
   $("#c-lido").addEventListener("change", (e) => { calc.lidoPct = parseFloat(e.target.value) || 5; calc.reales = {}; guardarCalc(); renderCalc(); });
