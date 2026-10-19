@@ -479,9 +479,6 @@
     <button class="pestana" role="tab" id="t-avance" aria-selected="false" data-p="avance">
       <span class="icono"><svg class="ic" viewBox="0 0 24 24"><path d="M5 9.2h3V19H5V9.2zM10.6 5h2.8v14h-2.8V5zm5.6 8H19v6h-2.8v-6z"/></svg></span><span>Avance</span>
     </button>
-    <button class="pestana" role="tab" id="t-compras" aria-selected="false" data-p="compras">
-      <span class="icono"><svg class="ic" viewBox="0 0 24 24"><path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49A1.003 1.003 0 0 0 20 4H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"/></svg></span><span>Compras</span>
-    </button>
     <button class="pestana" role="tab" id="t-trucos" aria-selected="false" data-p="trucos">
       <span class="icono"><svg class="ic" viewBox="0 0 24 24"><path d="M9 21c0 .55.45 1 1 1h4c.55 0 1-.45 1-1v-1H9v1zm3-19C8.14 2 5 5.14 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.86-3.14-7-7-7z"/></svg></span><span>Trucos</span>
     </button>
@@ -504,16 +501,14 @@
   <section id="p-lote" role="tabpanel" aria-labelledby="t-lote" style="display:grid;gap:18px;">
     <div class="serie-banda" id="c-serie" hidden><span id="c-serie-txt"></span><button class="btn texto chico" type="button" id="c-serie-quitar">No es la mezcla semanal</button></div>
     <div class="recetas" role="radiogroup" aria-label="Qué vas a hacer">
-      <label class="receta"><input type="radio" name="receta" value="base" id="r-base"><b>Base sola</b><span>Agua, HEC, glicerina y PG. La prueba n.º 9. Con benzoato.</span></label>
-      <label class="receta"><input type="radio" name="receta" value="arg" id="r-arg" checked><b>Base + L-arginina</b><span>Arginina al 0,5 % con el cítrico dentro de su solución. Con benzoato.</span></label>
-      <label class="receta"><input type="radio" name="receta" value="menta" id="r-menta"><b>Base + arginina + menta</b><span>Lo anterior más la solución madre de menta (1 gota / 5 kg).</span></label>
-      <label class="receta"><input type="radio" name="receta" value="anal" id="r-anal"><b>Anal: base + lidocaína</b><span>Lidocaína al 7 % (7 g por 100 g; prueba de laboratorio), disuelta con cítrico (0,36–0,40 g por gramo) en el agua tibia antes de la HEC. Con benzoato. Sin arginina.</span></label>
-      <label class="receta"><input type="radio" name="receta" value="spray" id="r-spray"><b>Spray retardante</b><span>Lidocaína (5 → 10 %) en alcohol 96°, PG, glicerina y agua. Sin HEC, sin cítrico y sin medir pH.</span></label>
-      <label class="receta"><input type="radio" name="receta" value="cascara" id="r-cascara"><b>Bolas con cáscara</b><span>V0.2, cáscara más gruesa: gel HEC con 3 % de lactato de calcio (añadido al final), congelado en moldes, baño de alginato al 1 %. Serie de tiempos 5–20 min.</span></label>
-      <label class="receta"><input type="radio" name="receta" value="bolas" id="r-bolas"><b>Bolas que se derriten</b><span>Base de manteca de cacao, aceite de coco y almendras. Se funde al calor del cuerpo. Sin agua.</span></label>
+      <label class="receta"><input type="radio" name="receta" value="base" id="r-base"><b>Fórmula base</b><span>Agua, HEC, glicerina, PG y benzoato.</span></label>
+      <label class="receta"><input type="radio" name="receta" value="arg" id="r-arg" checked><b>Multiorgásmico</b><span>Fórmula base + L-arginina al 0,5 % con su cítrico.</span></label>
+      <label class="receta"><input type="radio" name="receta" value="anal" id="r-anal"><b>Analube</b><span>Fórmula base + lidocaína al 7 % disuelta con cítrico en agua tibia. Prueba de laboratorio.</span></label>
+      <label class="receta"><input type="radio" name="receta" value="spray" id="r-spray"><b>Spray retardante</b><span>Lidocaína al 10 % en alcohol 96°, PG, glicerina y agua.</span></label>
+      <label class="receta"><input type="radio" name="receta" value="cascara" id="r-cascara"><b>Esferas</b><span>Gel con lactato de calcio al 3 % y baño de alginato al 1 %.</span></label>
     </div>
     <div class="ajustes">
-      <div class="campo"><label for="c-total">Tamaño del lote (g)</label><input id="c-total" type="number" min="50" max="20000" step="1" value="252" inputmode="numeric"></div>
+      <div class="campo"><label for="c-total">Tamaño del lote (g)</label><input id="c-total" type="text" value="252" inputmode="decimal" placeholder="Ej. 111,177"></div>
       <div class="campo"><label for="c-agua">Agua</label><select id="c-agua"><option>Destilada</option><option>Desmineralizada</option><option>Grifo</option><option>Hervida</option><option>De mesa</option></select></div>
       <div class="campo"><label for="c-quien">Quién lo hace</label><input id="c-quien" list="personas" placeholder="Kike"></div>
       <div class="campo" id="c-lido-wrap" hidden><label for="c-lido">Lidocaína (%)</label><select id="c-lido"><option value="5">5 % (V0.1)</option><option value="7.5">7,5 %</option><option value="10">10 % (como los comerciales)</option></select></div>
@@ -733,7 +728,7 @@
 
   const st = { lotes: [], trucos: [], reglas: [], compras: [], avances: [], pruebas: [], filtro: "todos", q: "", abiertoSeg: null, segTipo: null, segSemana: null, vista: "seg" };
   try { if (localStorage.getItem("bitacora-vista") === "todas") st.vista = "todas"; } catch (_) {}
-  const PANELES = ["lote", "diario", "pruebas", "avance", "compras", "trucos", "reglas"];
+  const PANELES = ["lote", "diario", "pruebas", "avance", "trucos", "reglas"];
   function avisar(txt) {
     const t = $("#toast"); t.textContent = txt; t.hidden = false;
     clearTimeout(avisar._t); avisar._t = setTimeout(() => { t.hidden = true; }, 3200);
@@ -950,7 +945,7 @@
       const ls = seguidas();
       cont.append(h("div", { class: "banda-seg" },
         h("b", {}, "Estas " + ls.length + " fórmulas son las que mueven el termómetro"),
-        h("span", {}, "Renzo las sigue un mes entero: cada lunes se hace una mezcla nueva de cada una, con un solo cambio respecto a la semana anterior. Debajo de cada prueba de partida van sus mezclas semanales. El resto de pruebas está en «Todas las pruebas».")));
+        h("span", {}, "Cada lunes, una mezcla nueva de cada una con un solo cambio. Lo demás está en «Todas las pruebas».")));
       if (!ls.length) cont.append(h("p", { class: "vacio" }, "No hay pruebas marcadas para seguimiento."));
       for (const l of ls) {
         cont.append(h("h2", { class: "linea-tit" }, (l.seguir && l.seguir.nombre) || l.titulo || "Prueba"));
@@ -1126,6 +1121,7 @@
     for (const l of st.lotes) {
       if (!l.revisiones || !l.creado) continue;
       const t0 = Date.parse(l.creado); if (isNaN(t0)) continue;
+      if (!l.seguir && !l.serie && ahora - t0 > 14 * MS_DIA) continue;
       for (const [k, dt, nombre] of [["h24", 24 * HORA, "a las 24 h"], ["d7", 7 * 24 * HORA, "a los 7 días"]]) {
         if (l.revisiones[k]) continue;
         const vence = t0 + dt, falta = vence - ahora;
@@ -1138,6 +1134,7 @@
       items.push({ l, k: null, semana: p.n, nombre: "mezcla nueva del lunes (semana " + p.n + ")", falta: p.estado === "toca" ? 0 : -(Date.now() - p.fecha.getTime()) });
     }
     items.sort((a, b) => a.falta - b.falta);
+    items.splice(4);
     panel.hidden = !items.length;
     ul.replaceChildren(...items.map(({ l, k, semana, nombre, falta }) => {
       const tarde = falta <= 0, hrs = Math.round(Math.abs(falta) / HORA);
@@ -1257,7 +1254,7 @@
   // Bolas que se derriten V0.1 (por 100 g, ~25 bolas de 4 g): cacao 58 · coco 20 · almendras 20 · vitamina E 1 · aroma 1.
   const BOLAS = { cacao: 0.58, coco: 0.20, almendras: 0.20, vitE: 0.01, aroma: 0.01 };
   // Bolas con cáscara V0.1: interior = base n.º 9 con 2 % de lactato de calcio; baño = 6 veces el interior, alginato al 0,5 %.
-  const RECETAS = { base: "Base sola", arg: "Base + L-arginina", menta: "Base + arginina + menta", anal: "Anal: base + lidocaína", spray: "Spray retardante", bolas: "Bolas que se derriten", cascara: "Bolas con cáscara" };
+  const RECETAS = { base: "Fórmula base", arg: "Multiorgásmico", menta: "Multiorgásmico + menta", anal: "Analube", spray: "Spray retardante", bolas: "Bolas que se derriten (retirada)", cascara: "Esferas" };
   const TAM_DEFECTO = { spray: 100, bolas: 100, cascara: 100 };
   const NOMBRES = {
     banoAgua: "Baño: agua desmineralizada", banoAlg: "Baño: alginato de sodio", lactato: "Lactato de calcio (disuelto aparte, al final)",
@@ -1279,6 +1276,7 @@
   let calc = { rid: "arg", total: 252, agua: "Destilada", quien: "", cambio: "", checks: {}, reales: {}, lidoPct: 10 };
   try { const g = JSON.parse(localStorage.getItem("bitacora-calc") || "null"); if (g && RECETAS[g.rid]) calc = Object.assign(calc, g); } catch (_) {}
   const guardarCalc = () => { try { localStorage.setItem("bitacora-calc", JSON.stringify(calc)); } catch (_) {} };
+  if (!document.getElementById("r-" + calc.rid)) calc.rid = "arg";
 
   function calcular(rid, T) {
     if (rid === "cascara") {
@@ -1469,13 +1467,13 @@
   }
   function prepararCalc() {
     $("#r-" + calc.rid).checked = true;
-    $("#c-total").value = calc.total; $("#c-agua").value = calc.agua; $("#c-quien").value = calc.quien; $("#c-cambio").value = calc.cambio;
+    $("#c-total").value = String(calc.total).replace(".", ","); $("#c-agua").value = calc.agua; $("#c-quien").value = calc.quien; $("#c-cambio").value = calc.cambio;
     $("#c-lido").value = String(calc.lidoPct);
     pintaSerie(); renderCalc();
   }
   $("#c-serie-quitar").addEventListener("click", () => { calc.serie = null; calc.cambio = ""; $("#c-cambio").value = ""; guardarCalc(); pintaSerie(); });
   $("#r-" + calc.rid).checked = true;
-  $("#c-total").value = calc.total; $("#c-agua").value = calc.agua; $("#c-quien").value = calc.quien; $("#c-cambio").value = calc.cambio;
+  $("#c-total").value = String(calc.total).replace(".", ","); $("#c-agua").value = calc.agua; $("#c-quien").value = calc.quien; $("#c-cambio").value = calc.cambio;
   pintaSerie();
   for (const rb of document.querySelectorAll("input[name=receta]")) rb.addEventListener("change", () => {
     // Cada receta tiene su tamaño habitual; solo se cambia si el usuario no lo había tocado
@@ -1483,10 +1481,10 @@
     if (calc.serie) { calc.serie = null; pintaSerie(); }
     calc.rid = rb.value; calc.checks = {}; calc.reales = {};
     if (calc.total === antes) calc.total = despues;
-    $("#c-total").value = calc.total;
+    $("#c-total").value = String(calc.total).replace(".", ",");
     guardarCalc(); renderCalc();
   });
-  $("#c-total").addEventListener("change", (e) => { calc.total = Math.max(50, Math.min(20000, parseFloat(e.target.value) || 252)); e.target.value = calc.total; calc.reales = {}; guardarCalc(); renderCalc(); });
+  $("#c-total").addEventListener("change", (e) => { calc.total = Math.max(1, Math.min(20000, parseFloat(String(e.target.value).replace(",", ".")) || 252)); e.target.value = String(calc.total).replace(".", ","); calc.reales = {}; guardarCalc(); renderCalc(); });
   $("#c-agua").addEventListener("change", (e) => { calc.agua = e.target.value; guardarCalc(); renderCalc(); });
   $("#c-lido").value = String(calc.lidoPct);
   $("#c-lido").addEventListener("change", (e) => { calc.lidoPct = parseFloat(e.target.value) || 5; calc.reales = {}; guardarCalc(); renderCalc(); });
