@@ -1434,7 +1434,7 @@
     return div;
   }
   function renderCalc() {
-    const T = Math.max(50, Math.min(20000, calc.total || 252));
+    const T = Math.max(1, Math.min(200000, calc.total || 252));
     const r = calcular(calc.rid, T);
     $("#c-alerta-agua").hidden = !(calc.agua === "Grifo" && calc.rid !== "base" && calc.rid !== "spray" && calc.rid !== "bolas");
     $("#c-total").min = calc.rid === "cascara" ? 20 : 50;
