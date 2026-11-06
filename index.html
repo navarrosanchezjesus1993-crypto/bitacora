@@ -457,7 +457,7 @@
     <div class="contadores" aria-live="polite">
       <span class="contador"><b id="c-lotes">0</b> lotes</span>
       <span class="contador"><b id="c-fotos">0</b> fotos</span>
-      <span class="contador"><b id="c-trucos">0</b> trucos ✓</span>
+      <span class="contador" hidden><b id="c-trucos">0</b> trucos ✓</span>
     </div>
     <button class="btn tonal chico" id="btn-instalar" hidden>Instalar</button>
     <button class="btn-candado" id="btn-claude" type="button" aria-label="Pregúntale a Claude" title="Pregúntale a Claude"><svg class="ic" viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 9h12v2H6V9zm8 5H6v-2h8v2zm4-6H6V6h12v2z"/></svg><span class="globo" id="claude-globo" hidden>0</span></button>
@@ -468,21 +468,21 @@
 <nav class="navegacion" aria-label="Secciones">
   <div class="fila" role="tablist">
     <button class="pestana" role="tab" id="t-lote" aria-selected="true" data-p="lote">
-      <span class="icono"><svg class="ic" viewBox="0 0 24 24"><path d="M13 11.33 18 18H6l5-6.67V6h2m2.96-2H8.04c-.42 0-.65.48-.39.81L9 6.5v4.17L3.2 18.4c-.49.66-.02 1.6.8 1.6h16c.82 0 1.29-.94.8-1.6L15 10.67V6.5l1.35-1.69c.26-.33.03-.81-.39-.81z"/></svg></span><span>Lote</span>
-    </button>
-    <button class="pestana" role="tab" id="t-diario" aria-selected="false" data-p="diario">
-      <span class="icono"><svg class="ic" viewBox="0 0 24 24"><path d="M21 5c-1.11-.35-2.33-.5-3.5-.5-1.95 0-4.05.4-5.5 1.5-1.45-1.1-3.55-1.5-5.5-1.5S2.45 4.9 1 6v14.65c0 .25.25.5.5.5.1 0 .15-.05.25-.05C3.1 20.45 5.05 20 6.5 20c1.95 0 4.05.4 5.5 1.5 1.35-.85 3.8-1.5 5.5-1.5 1.65 0 3.35.3 4.75 1.05.1.05.15.05.25.05.25 0 .5-.25.5-.5V6c-.6-.45-1.25-.75-2-1zm0 13.5c-1.1-.35-2.3-.5-3.5-.5-1.7 0-4.15.65-5.5 1.5V8c1.35-.85 3.8-1.5 5.5-1.5 1.2 0 2.4.15 3.5.5v11.5z"/></svg></span><span>Diario</span>
+      <span class="icono"><svg class="ic" viewBox="0 0 24 24"><path d="M13 11.33 18 18H6l5-6.67V6h2m2.96-2H8.04c-.42 0-.65.48-.39.81L9 6.5v4.17L3.2 18.4c-.49.66-.02 1.6.8 1.6h16c.82 0 1.29-.94.8-1.6L15 10.67V6.5l1.35-1.69c.26-.33.03-.81-.39-.81z"/></svg></span><span>Producción</span>
     </button>
     <button class="pestana" role="tab" id="t-pruebas" aria-selected="false" data-p="pruebas">
       <span class="icono"><svg class="ic" viewBox="0 0 24 24"><path d="M19 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2zm-9 14-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"/></svg></span><span>Pruebas</span>
     </button>
-    <button class="pestana" role="tab" id="t-avance" aria-selected="false" data-p="avance">
+    <button class="pestana" role="tab" id="t-diario" aria-selected="false" data-p="diario">
+      <span class="icono"><svg class="ic" viewBox="0 0 24 24"><path d="M21 5c-1.11-.35-2.33-.5-3.5-.5-1.95 0-4.05.4-5.5 1.5-1.45-1.1-3.55-1.5-5.5-1.5S2.45 4.9 1 6v14.65c0 .25.25.5.5.5.1 0 .15-.05.25-.05C3.1 20.45 5.05 20 6.5 20c1.95 0 4.05.4 5.5 1.5 1.35-.85 3.8-1.5 5.5-1.5 1.65 0 3.35.3 4.75 1.05.1.05.15.05.25.05.25 0 .5-.25.5-.5V6c-.6-.45-1.25-.75-2-1zm0 13.5c-1.1-.35-2.3-.5-3.5-.5-1.7 0-4.15.65-5.5 1.5V8c1.35-.85 3.8-1.5 5.5-1.5 1.2 0 2.4.15 3.5.5v11.5z"/></svg></span><span>Diario</span>
+    </button>
+    <button class="pestana" role="tab" id="t-avance" aria-selected="false" data-p="avance" hidden>
       <span class="icono"><svg class="ic" viewBox="0 0 24 24"><path d="M5 9.2h3V19H5V9.2zM10.6 5h2.8v14h-2.8V5zm5.6 8H19v6h-2.8v-6z"/></svg></span><span>Avance</span>
     </button>
-    <button class="pestana" role="tab" id="t-trucos" aria-selected="false" data-p="trucos">
+    <button class="pestana" role="tab" id="t-trucos" aria-selected="false" data-p="trucos" hidden>
       <span class="icono"><svg class="ic" viewBox="0 0 24 24"><path d="M9 21c0 .55.45 1 1 1h4c.55 0 1-.45 1-1v-1H9v1zm3-19C8.14 2 5 5.14 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.86-3.14-7-7-7z"/></svg></span><span>Trucos</span>
     </button>
-    <button class="pestana" role="tab" id="t-reglas" aria-selected="false" data-p="reglas">
+    <button class="pestana" role="tab" id="t-reglas" aria-selected="false" data-p="reglas" hidden>
       <span class="icono"><svg class="ic" viewBox="0 0 24 24"><path d="m23 12-2.44-2.79.34-3.69-3.61-.82-1.89-3.2L12 2.96 8.6 1.5 6.71 4.69 3.1 5.5l.34 3.7L1 12l2.44 2.79-.34 3.7 3.61.82L8.6 22.5l3.4-1.47 3.4 1.46 1.89-3.19 3.61-.82-.34-3.69L23 12zm-12.91 4.72-3.8-3.81 1.48-1.48 2.32 2.33 5.85-5.87 1.48 1.48-7.33 7.35z"/></svg></span><span>Reglas</span>
     </button>
   </div>
@@ -501,14 +501,16 @@
   <section id="p-lote" role="tabpanel" aria-labelledby="t-lote" style="display:grid;gap:18px;">
     <div class="serie-banda" id="c-serie" hidden><span id="c-serie-txt"></span><button class="btn texto chico" type="button" id="c-serie-quitar">No es la mezcla semanal</button></div>
     <div class="recetas" role="radiogroup" aria-label="Qué vas a hacer">
-      <label class="receta"><input type="radio" name="receta" value="base" id="r-base"><b>Fórmula base</b><span>Agua, HEC, glicerina, PG y benzoato.</span></label>
-      <label class="receta"><input type="radio" name="receta" value="arg" id="r-arg" checked><b>Multiorgásmico</b><span>Fórmula base + L-arginina al 0,5 % con su cítrico.</span></label>
-      <label class="receta"><input type="radio" name="receta" value="anal" id="r-anal"><b>Analube</b><span>Fórmula base + lidocaína al 7 % disuelta con cítrico en agua tibia. Prueba de laboratorio.</span></label>
-      <label class="receta"><input type="radio" name="receta" value="spray" id="r-spray"><b>Spray retardante</b><span>Lidocaína al 10 % en alcohol 96°, PG, glicerina y agua.</span></label>
-      <label class="receta"><input type="radio" name="receta" value="cascara" id="r-cascara"><b>Esferas</b><span>Gel con lactato de calcio al 3 % y baño de alginato al 1 %.</span></label>
+      <label class="receta" hidden><input type="radio" name="receta" value="base" id="r-base"><b>Fórmula base</b><span>Agua, HEC, glicerina, PG y benzoato.</span></label>
+      <label class="receta" hidden><input type="radio" name="receta" value="arg" id="r-arg"><b>Multiorgásmico</b><span>Fórmula base + L-arginina al 0,5 % con su cítrico.</span></label>
+      <label class="receta"><input type="radio" name="receta" value="anal" id="r-anal" checked><b>Analube</b><span>Gel de HEC con lidocaína disuelta con cítrico en agua tibia. pH objetivo 5,5–6,5. Prototipo 🟠.</span></label>
+      <label class="receta" hidden><input type="radio" name="receta" value="spray" id="r-spray"><b>Spray retardante</b><span>Lidocaína al 10 % en alcohol 96°, PG, glicerina y agua.</span></label>
+      <label class="receta" hidden><input type="radio" name="receta" value="cascara" id="r-cascara"><b>Esferas</b><span>Gel con lactato de calcio al 3 % y baño de alginato al 1 %.</span></label>
     </div>
     <div class="ajustes">
-      <div class="campo"><label for="c-total">Tamaño del lote (g)</label><input id="c-total" type="text" value="252" inputmode="decimal" placeholder="Ej. 111,177"></div>
+      <div class="campo"><label for="c-total">Tamaño del lote (g) · 1 L ≈ 1 020 g, 5 L ≈ 5 100 g</label><input id="c-total" type="text" value="100" inputmode="decimal" placeholder="Ej. 5100"></div>
+      <div class="campo"><label for="c-lidoA">Lidocaína</label><select id="c-lidoA"><option value="5">50 g por litro (≈ 4,9 %)</option><option value="7">70 g por litro (≈ 6,9 %)</option></select></div>
+      <div class="campo"><label for="c-cons">Conservante</label><select id="c-cons"><option value="benz">Benzoato de sodio 0,10 % (el de siempre)</option><option value="metil">Metilparabeno 0,25 % (en prueba)</option></select></div>
       <div class="campo"><label for="c-agua">Agua</label><select id="c-agua"><option>Destilada</option><option>Desmineralizada</option><option>Grifo</option><option>Hervida</option><option>De mesa</option></select></div>
       <div class="campo"><label for="c-quien">Quién lo hace</label><input id="c-quien" list="personas" placeholder="Kike"></div>
       <div class="campo" id="c-lido-wrap" hidden><label for="c-lido">Lidocaína (%)</label><select id="c-lido"><option value="5">5 % (V0.1)</option><option value="7.5">7,5 %</option><option value="10">10 % (como los comerciales)</option></select></div>
@@ -560,7 +562,7 @@
 
   <!-- DIARIO -->
   <section id="p-diario" role="tabpanel" aria-labelledby="t-diario" hidden style="display:grid;gap:16px;">
-    <div class="vistas" role="group" aria-label="Qué pruebas ver">
+    <div class="vistas" role="group" aria-label="Qué pruebas ver" hidden>
       <button type="button" id="v-seg" aria-pressed="true">En seguimiento <span class="n" id="v-seg-n"></span></button>
       <button type="button" id="v-todas" aria-pressed="false">Todas las pruebas <span class="n" id="v-todas-n"></span></button>
     </div>
@@ -727,8 +729,12 @@
   }
 
   const st = { lotes: [], trucos: [], reglas: [], compras: [], avances: [], pruebas: [], filtro: "todos", q: "", abiertoSeg: null, segTipo: null, segSemana: null, vista: "seg" };
-  try { if (localStorage.getItem("bitacora-vista") === "todas") st.vista = "todas"; } catch (_) {}
-  const PANELES = ["lote", "diario", "pruebas", "avance", "trucos", "reglas"];
+  // Limpieza del 6/11: la app se enfoca en la producción de Analube. Lo anterior a esta fecha
+  // no se borra de la base de datos: se oculta y queda en informes/archivo-bitacora-2026-11-06.html.
+  const ARCHIVO = "2026-11-06";
+  const nuevo = (x) => ((x.fecha || x.creado || "") >= ARCHIVO);
+  st.vista = "todas";
+  const PANELES = ["lote", "pruebas", "diario"];
   function avisar(txt) {
     const t = $("#toast"); t.textContent = txt; t.hidden = false;
     clearTimeout(avisar._t); avisar._t = setTimeout(() => { t.hidden = true; }, 3200);
@@ -957,7 +963,7 @@
     }
     const lista = st.lotes.filter((l) => !l.seguir && !l.serie).filter(coincide);
     if (!lista.length) {
-      cont.append(h("p", { class: "vacio" }, st.lotes.length ? "Ningún lote coincide con el filtro." : "Todavía no hay lotes apuntados."));
+      cont.append(h("p", { class: "vacio" }, st.lotes.length ? "Ningún lote coincide con el filtro." : "Desde el 6 de noviembre la bitácora empieza limpia, solo para Analube. Lo anterior está guardado en el archivo de la bitácora (Claude lo tiene)."));
       return;
     }
     for (const l of lista) cont.append(tarjetaLote(l));
@@ -1262,9 +1268,9 @@
     lido: "Lidocaína base", citL: "Ácido cítrico para la lidocaína (inicial)", alcohol: "Alcohol etílico 96°",
     agua: "Agua (vaso principal)", reserva: "Agua (para disolver el activo)", arg: "L-arginina",
     cit: "Ácido cítrico (dosis inicial)", hec: "HEC (Cellosize QP100)", gli: "Glicerina", pg: "Propilenglicol (para la papilla)", menta: "Solución madre de menta",
-    benz: "Benzoato de sodio (conservante, en el agua)"
+    benz: "Benzoato de sodio (conservante, en el agua)", metil: "Metilparabeno (conservante, disuelto en el PG tibio)"
   };
-  const ORDEN_GEL = ["agua", "benz", "lido", "citL", "reserva", "arg", "cit", "hec", "gli", "pg", "menta"];
+  const ORDEN_GEL = ["agua", "benz", "lido", "citL", "reserva", "arg", "cit", "metil", "hec", "gli", "pg", "menta"];
   const ORDEN_SPRAY = ["alcohol", "lido", "pg", "gli", "agua"];
   const ORDEN_BOLAS = ["cacao", "coco", "almendras", "vitE", "aroma"];
   const ORDEN_CASCARA = ["banoAgua", "banoAlg", "agua", "benz", "hec", "gli", "pg", "reserva", "lactato"];
@@ -1273,10 +1279,13 @@
   const fmt = (n) => n.toFixed(2).replace(".", ",");
   const num = (s) => { const v = parseFloat(String(s || "").replace(",", ".")); return isNaN(v) ? null : v; };
 
-  let calc = { rid: "arg", total: 252, agua: "Destilada", quien: "", cambio: "", checks: {}, reales: {}, lidoPct: 10 };
+  let calc = { rid: "anal", total: 100, agua: "Destilada", quien: "", cambio: "", checks: {}, reales: {}, lidoPct: 10, lidoAnal: 5, cons: "benz" };
   try { const g = JSON.parse(localStorage.getItem("bitacora-calc") || "null"); if (g && RECETAS[g.rid]) calc = Object.assign(calc, g); } catch (_) {}
   const guardarCalc = () => { try { localStorage.setItem("bitacora-calc", JSON.stringify(calc)); } catch (_) {} };
-  if (!document.getElementById("r-" + calc.rid)) calc.rid = "arg";
+  // Desde el 6/11 la app solo hace Analube (producción de los próximos días)
+  if (calc.rid !== "anal") { calc.rid = "anal"; calc.checks = {}; calc.reales = {}; calc.serie = null; }
+  if (calc.lidoAnal !== 7) calc.lidoAnal = 5;
+  if (calc.cons !== "metil") calc.cons = "benz";
 
   function calcular(rid, T) {
     if (rid === "cascara") {
@@ -1306,11 +1315,16 @@
       return r;
     }
     const conArg = rid === "arg" || rid === "menta", conMenta = rid === "menta", conLido = rid === "anal";
+    // Analube (6/11): lidocaína 5 % (50 g/L, prueba de 5 L de Renzo) o 7 %; cítrico 0,36 g/g de arranque.
+    // Conservante: benzoato 0,10 % o metilparabeno 0,25 % (en prueba: el benzoato protege poco a pH 5,5–6,5).
+    // Dosis en g por litro (como la piensa Renzo); 1 L de gel ≈ 1 020 g (supuesto, pendiente de pesar).
+    const lidoF = (calc.lidoAnal === 7 ? 70 : 50) / 1020;
+    const metil = conLido && calc.cons === "metil";
     const r = { hec: T * P.hec, gli: T * P.gli, arg: conArg ? T * P.arg : 0, cit: conArg ? T * P.cit : 0, menta: conMenta ? T * P.menta : 0,
-      lido: conLido ? T * P.lido : 0, citL: conLido ? T * P.citL : 0, benz: T * P.benz };
+      lido: conLido ? T * lidoF : 0, citL: conLido ? T * lidoF * 0.36 : 0, benz: metil ? 0 : T * P.benz, metil: metil ? T * 0.0025 : 0 };
     const pgTotal = T * P.pg;
     r.pg = pgTotal - r.menta;
-    const agua = T - (r.hec + r.gli + pgTotal + r.arg + r.cit + r.lido + r.citL + r.benz);
+    const agua = T - (r.hec + r.gli + pgTotal + r.arg + r.cit + r.lido + r.citL + r.benz + r.metil);
     r.reserva = conArg ? T * P.reserva : 0;
     r.agua = agua - r.reserva;
     return r;
@@ -1357,15 +1371,20 @@
     }
     if (rid === "menta") L.push({ id: "m0", t: ["¿Tienes la solución madre de menta? Si no: ", "1 gota", " de menta en ", "20,00 g", " de PG, en frasco ámbar. Agita hasta que quede transparente. Si sale turbia, no la uses."], ref: "Truco 6" });
     if (rid === "anal") {
-      L.push({ id: "l0", t: ["Ponte guantes. Pesa ", g("agua"), " de agua en el vaso principal (nada de grifo) y disuelve ", g("benz"), " de benzoato de sodio. Entibia el agua al baño María, sin pasar de ", "50 °C", ": al 7 % la lidocaína tarda aún más en entrar si está fría."], ref: "Truco 10 · lote del 5/10: capa en superficie hasta calentar" });
+      const conMetil = r.metil > 0;
+      L.push({ id: "l0", t: conMetil
+        ? ["Ponte guantes. Pesa ", g("agua"), " de agua en el vaso principal (nada de grifo). SIN benzoato: en este lote el conservante es el metilparabeno. Entibia el agua al baño María, sin pasar de ", "50 °C", "."]
+        : ["Ponte guantes. Pesa ", g("agua"), " de agua en el vaso principal (nada de grifo) y disuelve ", g("benz"), " de benzoato de sodio. Entibia el agua al baño María, sin pasar de ", "50 °C", "."], ref: "Fría, la lidocaína tarda mucho más en entrar" });
       L.push({ id: "l1", t: ["Echa ", g("lido"), " de lidocaína base al agua y remueve. Flota y se pega al vidrio: es normal, todavía no es sal."] });
-      L.push({ id: "l2", t: ["Añade ", g("citL"), " de ácido cítrico, PESADO EXACTO (0,36 g por gramo de lidocaína), y remueve 15 min raspando las paredes, con el vaso en el baño tibio. Al 7 % tarda: no juzgues antes de los 15 min."], ref: "Con 0,40 g/g el lote al 2,8 % quedó en pH 5,18: se arranca un poco más bajo para no pasarse" });
+      L.push({ id: "l2", t: ["Añade ", g("citL"), " de ácido cítrico, PESADO EXACTO (0,36 g por gramo de lidocaína), y remueve 15 min raspando las paredes, con el vaso en el baño tibio. No juzgues antes de los 15 min."], ref: "Lote de 1 L con 0,50 g/g quedó en pH 4,83: no pases del tope" });
       L.push({ id: "l2b", t: ["Si a los 15 min aún queda capa o polvo, añade cítrico de ", "0,10 g", " en 0,10 g (tope ", fmt(r.lido * 0.04) + " g", " más) hasta que esté transparente. Apunta el cítrico total en «Peso real»."], ref: "Tope = 0,40 g por gramo de lidocaína" });
-      L.push({ id: "l3", t: ["Mide el pH del agua. Objetivo ", "5,5–6,5", ". Si está por debajo, no corrijas: anótalo y sigue. Si baja de ", "5,0", ", para y consulta antes de seguir."], ref: "pH-metro calibrado · al 7 % puede quedar por debajo de 5" });
-      L.push({ id: "b2", t: ["Haz la papilla: ", g("hec"), " de HEC + ", g("gli"), " de glicerina + ", g("pg"), " de PG. Mezcla hasta que no quede polvo seco."] });
+      L.push({ id: "l3", t: ["Mide el pH del agua. Objetivo ", "5,5–6,5", ". Apúntalo. Si baja de ", "5,0", ", para y consulta antes de seguir."], ref: "pH-metro calibrado con 4 y 7" });
+      if (conMetil) L.push({ id: "mp", t: ["Aparte, en un vasito: entibia ", g("pg"), " de PG (baño María, ~40 °C) y disuelve ", g("metil"), " de metilparabeno removiendo hasta que no quede polvo. Ese PG es el de la papilla."], ref: "Solo cambia el conservante: lo demás igual que siempre" });
+      L.push({ id: "b2", t: ["Haz la papilla: ", g("hec"), " de HEC + ", g("gli"), " de glicerina + ", conMetil ? "el PG con metilparabeno" : g("pg") + " de PG", ". Mezcla hasta que no quede polvo seco."] });
       L.push({ id: "b3", t: ["Vierte la papilla despacio sobre el agua con lidocaína, removiendo sin hacer remolino."], ref: "Trucos 1 y 7" });
       L.push({ id: "b4", t: ["Bate igual que siempre. En agua algo ácida tarda un poco más: espera ", "~10 minutos", " a que espese."], ref: "Prueba María", reloj: true });
-      L.push({ id: "l4", t: ["Mide el pH del gel terminado y apúntalo en el lote."] });
+      L.push({ id: "l4", t: ["Mide el pH del gel terminado y apúntalo en el lote. Objetivo ", "5,5–6,5", "."] });
+      L.push({ id: "l4b", t: ["Solo si quedó por debajo de 5,5: TEA pura de ", "0,10 g", " en 0,10 g, removiendo 2 min y midiendo cada vez, hasta ", "5,5", ". Tope ", fmt(r.lido * 0.2) + " g", ". Si se enturbia, para. Apunta los gramos de TEA."], ref: "Prueba: unos 0,8 g por 100 g para subir de 4,8 a 5,5 (cálculo, no medido)" });
       L.push({ id: "l5", t: ["Separa ", "20 g", " en un frasco a la nevera: es donde antes aparecerían los cristales."] });
       L.push({ id: "f1", t: ["Tapa y etiqueta: «LAB · NO USAR · LIDOCAÍNA · fecha». No se prueba en piel ni en mucosa."], ref: "Regla 6" });
       L.push({ id: "f2", t: ["Foto contra fondo oscuro. Guarda el lote aquí abajo y revisa cristales a 24 h, 72 h y 7 días."] });
@@ -1469,6 +1488,7 @@
     $("#r-" + calc.rid).checked = true;
     $("#c-total").value = String(calc.total).replace(".", ","); $("#c-agua").value = calc.agua; $("#c-quien").value = calc.quien; $("#c-cambio").value = calc.cambio;
     $("#c-lido").value = String(calc.lidoPct);
+    $("#c-lidoA").value = String(calc.lidoAnal); $("#c-cons").value = calc.cons;
     pintaSerie(); renderCalc();
   }
   $("#c-serie-quitar").addEventListener("click", () => { calc.serie = null; calc.cambio = ""; $("#c-cambio").value = ""; guardarCalc(); pintaSerie(); });
@@ -1488,6 +1508,9 @@
   $("#c-agua").addEventListener("change", (e) => { calc.agua = e.target.value; guardarCalc(); renderCalc(); });
   $("#c-lido").value = String(calc.lidoPct);
   $("#c-lido").addEventListener("change", (e) => { calc.lidoPct = parseFloat(e.target.value) || 5; calc.reales = {}; guardarCalc(); renderCalc(); });
+  $("#c-lidoA").value = String(calc.lidoAnal); $("#c-cons").value = calc.cons;
+  $("#c-lidoA").addEventListener("change", (e) => { calc.lidoAnal = e.target.value === "7" ? 7 : 5; calc.reales = {}; guardarCalc(); renderCalc(); });
+  $("#c-cons").addEventListener("change", (e) => { calc.cons = e.target.value === "metil" ? "metil" : "benz"; calc.reales = {}; calc.checks = {}; guardarCalc(); renderCalc(); });
   $("#c-quien").addEventListener("input", (e) => { calc.quien = e.target.value; guardarCalc(); });
   $("#c-cambio").addEventListener("input", (e) => { calc.cambio = e.target.value; guardarCalc(); });
   $("#c-reset").addEventListener("click", () => {
@@ -1505,7 +1528,7 @@
     for (const k of orden(calc.rid)) {
       if (!(r[k] > 0)) continue;
       const real = num(calc.reales[k]);
-      const corto = { banoAgua: "baño agua", banoAlg: "alginato", lactato: "lactato Ca", cacao: "manteca cacao", coco: "aceite coco", almendras: "almendras", vitE: "vit. E", aroma: "aroma", agua: "agua", alcohol: "alcohol 96°", lido: "lidocaína", citL: "cítrico (lidocaína)", reserva: "agua solución", arg: "arginina", cit: "cítrico", hec: "HEC", gli: "glicerina", pg: "PG", menta: "sol. menta", benz: "benzoato" }[k];
+      const corto = { metil: "metilparabeno", banoAgua: "baño agua", banoAlg: "alginato", lactato: "lactato Ca", cacao: "manteca cacao", coco: "aceite coco", almendras: "almendras", vitE: "vit. E", aroma: "aroma", agua: "agua", alcohol: "alcohol 96°", lido: "lidocaína", citL: "cítrico (lidocaína)", reserva: "agua solución", arg: "arginina", cit: "cítrico", hec: "HEC", gli: "glicerina", pg: "PG", menta: "sol. menta", benz: "benzoato" }[k];
       partes.push(corto + " " + fmt(real ?? r[k]));
       if (real == null) sinReal.push(corto);
     }
@@ -1517,7 +1540,7 @@
       const extra = serie ? { serie: serie.id, semana: serie.semana } : {};
       await db.collection("lotes").doc().set({
         ...extra,
-        fecha: hoy(), quien: calc.quien.trim(), titulo: (serie ? "Semana " + serie.semana + " · " : "") + RECETAS[calc.rid] + (calc.rid === "spray" ? " " + String(calc.lidoPct).replace(".", ",") + " %" : "") + " · " + fmt(T).replace(",00", "") + " g",
+        fecha: hoy(), quien: calc.quien.trim(), titulo: (serie ? "Semana " + serie.semana + " · " : "") + RECETAS[calc.rid] + (calc.rid === "spray" ? " " + String(calc.lidoPct).replace(".", ",") + " %" : "") + (calc.rid === "anal" ? " " + calc.lidoAnal + " %" + (calc.cons === "metil" ? " · metilparabeno" : "") : "") + " · " + fmt(T).replace(",00", "") + " g",
         cambio: calc.cambio.trim(), pesos, agua: calc.agua, ph: null, resultado: "", estado: "dato", leccion: "",
         fotos: [], seguimiento: [], revisiones: { h24: false, d7: false }, receta: calc.rid, total: T,
         pasosHechos: Object.keys(calc.checks).filter((k) => calc.checks[k]).length,
@@ -1919,7 +1942,7 @@
     $("#chat-cerrar").addEventListener("click", cerrarChat);
     db.collection("consultas").onSnapshot((snap) => {
       const antes = new Map(CHAT.lista.map((c) => [c.id, c.respondido]));
-      CHAT.lista = snap.docs.map((x) => Object.assign({ id: x.id }, x.data()));
+      CHAT.lista = snap.docs.map((x) => Object.assign({ id: x.id }, x.data())).filter((c) => (c.creado || "") >= ARCHIVO || c.estado !== "respondida");
       const llego = CHAT.lista.some((c) => c.respondido && antes.has(c.id) && antes.get(c.id) !== c.respondido);
       if (llego && !CHAT.abierto) { avisar("Claude respondió en el buzón"); try { if (navigator.vibrate) navigator.vibrate(120); } catch (_) {} }
       if (CHAT.abierto) { renderChat(); marcarVisto(); } else pintaGloboChat();
@@ -1935,14 +1958,14 @@
     iniciarCapsula();
     iniciarChat();
     db.collection("lotes").onSnapshot((snap) => {
-      st.lotes = snap.docs.map((x) => ({ id: x.id, ...x.data() })).sort(ordenLotes);
+      st.lotes = snap.docs.map((x) => ({ id: x.id, ...x.data() })).filter(nuevo).sort(ordenLotes);
       contadores(); renderDiario(); renderHoy(); renderAvances();
     }, fallo);
     db.collection("compras").onSnapshot((snap) => { st.compras = snap.docs.map((x) => ({ id: x.id, ...x.data() })); renderCompras(); }, fallo);
     db.collection("trucos").orderBy("n").onSnapshot((snap) => { st.trucos = snap.docs.map((x) => ({ id: x.id, ...x.data() })); contadores(); renderTrucos(); }, fallo);
     db.collection("reglas").orderBy("n").onSnapshot((snap) => { st.reglas = snap.docs.map((x) => ({ id: x.id, ...x.data() })); renderReglas(); }, fallo);
     db.collection("avance").orderBy("n").onSnapshot((snap) => { st.avances = snap.docs.map((x) => ({ id: x.id, ...x.data() })); renderAvances(); renderDiario(); }, fallo);
-    db.collection("pruebas").onSnapshot((snap) => { st.pruebas = snap.docs.map((x) => ({ id: x.id, ...x.data() })); renderPruebas(); }, fallo);
+    db.collection("pruebas").onSnapshot((snap) => { st.pruebas = snap.docs.map((x) => ({ id: x.id, ...x.data() })).filter(nuevo); renderPruebas(); }, fallo);
   }
 })();
 </script>
