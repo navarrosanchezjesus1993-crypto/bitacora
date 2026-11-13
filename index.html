@@ -1287,9 +1287,9 @@
   // 7/11: Kike compró el metilparabeno; la app abre una vez en 1 L (1 020 g) con metilparabeno
   try {
     // 13/11: llegó el propilparabeno; lote de 3 L (3 060 g) con metil 0,20 % + propil 0,02 %
-    if (localStorage.getItem("bitacora-preset") !== "20261113") {
+    if (localStorage.getItem("bitacora-preset") !== "20261113b") {
       Object.assign(calc, { total: 3060, lidoAnal: 5, cons: "mp", checks: {}, reales: {}, serie: null });
-      localStorage.setItem("bitacora-preset", "20261113");
+      localStorage.setItem("bitacora-preset", "20261113b");
     }
   } catch (_) { Object.assign(calc, { total: 3060, lidoAnal: 5, cons: "mp" }); }
   if (calc.lidoAnal !== 7) calc.lidoAnal = 5;
