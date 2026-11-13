@@ -1286,12 +1286,12 @@
   if (calc.rid !== "anal") { calc.rid = "anal"; calc.checks = {}; calc.reales = {}; calc.serie = null; }
   // 7/11: Kike compró el metilparabeno; la app abre una vez en 1 L (1 020 g) con metilparabeno
   try {
-    // 12/11: Kike compró el propilparabeno → metil 0,20 % + propil 0,02 % por defecto
-    if (localStorage.getItem("bitacora-preset") !== "20261112") {
-      Object.assign(calc, { total: 1020, lidoAnal: 5, cons: "mp", checks: {}, reales: {}, serie: null });
-      localStorage.setItem("bitacora-preset", "20261112");
+    // 13/11: llegó el propilparabeno; lote de 3 L (3 060 g) con metil 0,20 % + propil 0,02 %
+    if (localStorage.getItem("bitacora-preset") !== "20261113") {
+      Object.assign(calc, { total: 3060, lidoAnal: 5, cons: "mp", checks: {}, reales: {}, serie: null });
+      localStorage.setItem("bitacora-preset", "20261113");
     }
-  } catch (_) { Object.assign(calc, { total: 1020, lidoAnal: 5, cons: "mp" }); }
+  } catch (_) { Object.assign(calc, { total: 3060, lidoAnal: 5, cons: "mp" }); }
   if (calc.lidoAnal !== 7) calc.lidoAnal = 5;
   if (!["mp", "metil", "benz"].includes(calc.cons)) calc.cons = "benz";
 
