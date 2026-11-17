@@ -1286,7 +1286,7 @@
   if (calc.rid !== "anal") { calc.rid = "anal"; calc.checks = {}; calc.reales = {}; calc.serie = null; }
   // 7/11: Kike compró el metilparabeno; la app abre una vez en 1 L (1 020 g) con metilparabeno
   try {
-    // 17/11: Analube base V-HEC 1,20 % (Renzo: menos espeso); lote de 1,5 L (1 530 g) a 70 g/L con metil + propil
+    // 17/11: Analube base V-HEC 1,25 % (Renzo: menos espeso); lote de 1,5 L (1 530 g) a 70 g/L con metil + propil
     if (localStorage.getItem("bitacora-preset") !== "20261117") {
       Object.assign(calc, { total: 1530, lidoAnal: 7, cons: "mp", checks: {}, reales: {}, serie: null });
       localStorage.setItem("bitacora-preset", "20261117");
@@ -1329,7 +1329,7 @@
     const lidoF = (calc.lidoAnal === 7 ? 70 : 50) / 1020;
     const metil = conLido && (calc.cons === "metil" || calc.cons === "mp");
     const mp = conLido && calc.cons === "mp";
-    const r = { hec: T * (conLido ? 0.0120 : P.hec), gli: T * P.gli, arg: conArg ? T * P.arg : 0, cit: conArg ? T * P.cit : 0, menta: conMenta ? T * P.menta : 0,
+    const r = { hec: T * (conLido ? 0.0125 : P.hec), gli: T * P.gli, arg: conArg ? T * P.arg : 0, cit: conArg ? T * P.cit : 0, menta: conMenta ? T * P.menta : 0,
       lido: conLido ? T * lidoF : 0, citL: conLido ? T * lidoF * 0.36 : 0, benz: metil ? 0 : T * P.benz, metil: metil ? T * (mp ? 0.0020 : 0.0025) : 0, propil: mp ? T * 0.0002 : 0 };
     const pgTotal = T * P.pg;
     r.pg = pgTotal - r.menta;
