@@ -511,7 +511,7 @@
       <div class="campo"><label for="c-total">Tamaño del lote (g) · 1 L ≈ 1 020 g, 5 L ≈ 5 100 g</label><input id="c-total" type="text" value="1020" inputmode="decimal" placeholder="Ej. 5100"></div>
       <div class="campo"><label for="c-lidoA">Lidocaína</label><select id="c-lidoA"><option value="5">50 g por litro (≈ 4,9 %)</option><option value="7">70 g por litro (≈ 6,9 %)</option></select></div>
       <div class="campo"><label for="c-cons">Conservante</label><select id="c-cons"><option value="mp">Metil 0,20 % + propilparabeno 0,02 % (el nuevo)</option><option value="metil">Metilparabeno 0,25 % solo</option><option value="benz">Benzoato de sodio 0,10 % (el de antes)</option></select></div>
-      <div class="campo"><label for="c-sabor">Sabor</label><select id="c-sabor"><option value="base">Analube base (sin sabor ni color)</option><option value="mand">Mandarina (esencia + polisorbato 20, HEC 1,35 %)</option></select></div>
+      <div class="campo"><label for="c-sabor">Sabor</label><select id="c-sabor"><option value="base">Analube base (sin sabor ni color)</option><option value="mand">Mandarina (esencia + polisorbato 20 2:1, HEC 1,35 %)</option></select></div>
       <div class="campo"><label for="c-agua">Agua</label><select id="c-agua"><option>Destilada</option><option>Desmineralizada</option><option>Grifo</option><option>Hervida</option><option>De mesa</option></select></div>
       <div class="campo"><label for="c-quien">Quién lo hace</label><input id="c-quien" list="personas" placeholder="Kike"></div>
       <div class="campo" id="c-lido-wrap" hidden><label for="c-lido">Lidocaína (%)</label><select id="c-lido"><option value="5">5 % (V0.1)</option><option value="7.5">7,5 %</option><option value="10">10 % (como los comerciales)</option></select></div>
@@ -1269,7 +1269,7 @@
     lido: "Lidocaína base", citL: "Ácido cítrico para la lidocaína (inicial)", alcohol: "Alcohol etílico 96°",
     agua: "Agua (vaso principal)", reserva: "Agua (para disolver el activo)", arg: "L-arginina",
     cit: "Ácido cítrico (dosis inicial)", hec: "HEC (Cellosize QP100)", gli: "Glicerina", pg: "Propilenglicol (disuelve el conservante)", menta: "Solución madre de menta",
-    benz: "Benzoato de sodio (conservante, en el agua)", metil: "Metilparabeno (conservante, disuelto en el PG tibio)", propil: "Propilparabeno (conservante, con el metil en el PG tibio)", esen: "Esencia de mandarina (1 tapa = 3,5 g por litro)", ps20: "Polisorbato 20 (3 g por gramo de esencia)"
+    benz: "Benzoato de sodio (conservante, en el agua)", metil: "Metilparabeno (conservante, disuelto en el PG tibio)", propil: "Propilparabeno (conservante, con el metil en el PG tibio)", esen: "Esencia de mandarina (1 tapa = 3,5 g por litro)", ps20: "Polisorbato 20 (2 g por gramo de esencia)"
   };
   const ORDEN_GEL = ["agua", "benz", "lido", "citL", "reserva", "arg", "cit", "metil", "propil", "hec", "gli", "pg", "menta", "esen", "ps20"];
   const ORDEN_SPRAY = ["alcohol", "lido", "pg", "gli", "agua"];
@@ -1332,7 +1332,7 @@
     const metil = conLido && (calc.cons === "metil" || calc.cons === "mp");
     const mp = conLido && calc.cons === "mp";
     const mand = conLido && calc.sabor === "mand";
-    const r = { hec: T * (conLido ? (mand ? 0.0135 : 0.0125) : P.hec), esen: mand ? T * 3.5 / 1020 : 0, ps20: mand ? T * 3.5 * 3 / 1020 : 0, gli: T * P.gli, arg: conArg ? T * P.arg : 0, cit: conArg ? T * P.cit : 0, menta: conMenta ? T * P.menta : 0,
+    const r = { hec: T * (conLido ? (mand ? 0.0135 : 0.0125) : P.hec), esen: mand ? T * 3.5 / 1020 : 0, ps20: mand ? T * 3.5 * 2 / 1020 : 0, gli: T * P.gli, arg: conArg ? T * P.arg : 0, cit: conArg ? T * P.cit : 0, menta: conMenta ? T * P.menta : 0,
       lido: conLido ? T * lidoF : 0, citL: conLido ? T * lidoF * 0.36 : 0, benz: metil ? 0 : T * P.benz, metil: metil ? T * (mp ? 0.0020 : 0.0025) : 0, propil: mp ? T * 0.0002 : 0 };
     const pgTotal = T * P.pg;
     r.pg = pgTotal - r.menta;
