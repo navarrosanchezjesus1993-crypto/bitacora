@@ -511,6 +511,7 @@
       <div class="campo"><label for="c-total">Tamaño del lote (g) · 1 L ≈ 1 020 g, 5 L ≈ 5 100 g</label><input id="c-total" type="text" value="1020" inputmode="decimal" placeholder="Ej. 5100"></div>
       <div class="campo"><label for="c-lidoA">Lidocaína</label><select id="c-lidoA"><option value="5">50 g por litro (≈ 4,9 %)</option><option value="7">70 g por litro (≈ 6,9 %)</option></select></div>
       <div class="campo"><label for="c-cons">Conservante</label><select id="c-cons"><option value="mp">Metil 0,20 % + propilparabeno 0,02 % (el nuevo)</option><option value="metil">Metilparabeno 0,25 % solo</option><option value="benz">Benzoato de sodio 0,10 % (el de antes)</option></select></div>
+      <div class="campo"><label for="c-sabor">Sabor</label><select id="c-sabor"><option value="base">Analube base (sin sabor ni color)</option><option value="mand">Mandarina (esencia + polisorbato 20, HEC 1,35 %)</option></select></div>
       <div class="campo"><label for="c-agua">Agua</label><select id="c-agua"><option>Destilada</option><option>Desmineralizada</option><option>Grifo</option><option>Hervida</option><option>De mesa</option></select></div>
       <div class="campo"><label for="c-quien">Quién lo hace</label><input id="c-quien" list="personas" placeholder="Kike"></div>
       <div class="campo" id="c-lido-wrap" hidden><label for="c-lido">Lidocaína (%)</label><select id="c-lido"><option value="5">5 % (V0.1)</option><option value="7.5">7,5 %</option><option value="10">10 % (como los comerciales)</option></select></div>
@@ -1268,9 +1269,9 @@
     lido: "Lidocaína base", citL: "Ácido cítrico para la lidocaína (inicial)", alcohol: "Alcohol etílico 96°",
     agua: "Agua (vaso principal)", reserva: "Agua (para disolver el activo)", arg: "L-arginina",
     cit: "Ácido cítrico (dosis inicial)", hec: "HEC (Cellosize QP100)", gli: "Glicerina", pg: "Propilenglicol (disuelve el conservante)", menta: "Solución madre de menta",
-    benz: "Benzoato de sodio (conservante, en el agua)", metil: "Metilparabeno (conservante, disuelto en el PG tibio)", propil: "Propilparabeno (conservante, con el metil en el PG tibio)"
+    benz: "Benzoato de sodio (conservante, en el agua)", metil: "Metilparabeno (conservante, disuelto en el PG tibio)", propil: "Propilparabeno (conservante, con el metil en el PG tibio)", esen: "Esencia de mandarina (1 tapa = 3,5 g por litro)", ps20: "Polisorbato 20 (3 g por gramo de esencia)"
   };
-  const ORDEN_GEL = ["agua", "benz", "lido", "citL", "reserva", "arg", "cit", "metil", "propil", "hec", "gli", "pg", "menta"];
+  const ORDEN_GEL = ["agua", "benz", "lido", "citL", "reserva", "arg", "cit", "metil", "propil", "hec", "gli", "pg", "menta", "esen", "ps20"];
   const ORDEN_SPRAY = ["alcohol", "lido", "pg", "gli", "agua"];
   const ORDEN_BOLAS = ["cacao", "coco", "almendras", "vitE", "aroma"];
   const ORDEN_CASCARA = ["banoAgua", "banoAlg", "agua", "benz", "hec", "gli", "pg", "reserva", "lactato"];
@@ -1279,7 +1280,7 @@
   const fmt = (n) => n.toFixed(2).replace(".", ",");
   const num = (s) => { const v = parseFloat(String(s || "").replace(",", ".")); return isNaN(v) ? null : v; };
 
-  let calc = { rid: "anal", total: 1020, agua: "Destilada", quien: "", cambio: "", checks: {}, reales: {}, lidoPct: 10, lidoAnal: 5, cons: "mp" };
+  let calc = { rid: "anal", total: 1020, agua: "Destilada", quien: "", cambio: "", checks: {}, reales: {}, lidoPct: 10, lidoAnal: 5, cons: "mp", sabor: "base" };
   try { const g = JSON.parse(localStorage.getItem("bitacora-calc") || "null"); if (g && RECETAS[g.rid]) calc = Object.assign(calc, g); } catch (_) {}
   const guardarCalc = () => { try { localStorage.setItem("bitacora-calc", JSON.stringify(calc)); } catch (_) {} };
   // Desde el 6/11 la app solo hace Analube (producción de los próximos días)
@@ -1293,6 +1294,7 @@
     }
   } catch (_) { Object.assign(calc, { total: 1530, lidoAnal: 7, cons: "mp" }); }
   if (calc.lidoAnal !== 7) calc.lidoAnal = 5;
+  if (calc.sabor !== "mand") calc.sabor = "base";
   if (!["mp", "metil", "benz"].includes(calc.cons)) calc.cons = "benz";
 
   function calcular(rid, T) {
@@ -1329,11 +1331,12 @@
     const lidoF = (calc.lidoAnal === 7 ? 70 : 50) / 1020;
     const metil = conLido && (calc.cons === "metil" || calc.cons === "mp");
     const mp = conLido && calc.cons === "mp";
-    const r = { hec: T * (conLido ? 0.0125 : P.hec), gli: T * P.gli, arg: conArg ? T * P.arg : 0, cit: conArg ? T * P.cit : 0, menta: conMenta ? T * P.menta : 0,
+    const mand = conLido && calc.sabor === "mand";
+    const r = { hec: T * (conLido ? (mand ? 0.0135 : 0.0125) : P.hec), esen: mand ? T * 3.5 / 1020 : 0, ps20: mand ? T * 3.5 * 3 / 1020 : 0, gli: T * P.gli, arg: conArg ? T * P.arg : 0, cit: conArg ? T * P.cit : 0, menta: conMenta ? T * P.menta : 0,
       lido: conLido ? T * lidoF : 0, citL: conLido ? T * lidoF * 0.36 : 0, benz: metil ? 0 : T * P.benz, metil: metil ? T * (mp ? 0.0020 : 0.0025) : 0, propil: mp ? T * 0.0002 : 0 };
     const pgTotal = T * P.pg;
     r.pg = pgTotal - r.menta;
-    const agua = T - (r.hec + r.gli + pgTotal + r.arg + r.cit + r.lido + r.citL + r.benz + r.metil + r.propil);
+    const agua = T - (r.hec + r.gli + pgTotal + r.arg + r.cit + r.lido + r.citL + r.benz + r.metil + r.propil + r.esen + r.ps20);
     r.reserva = conArg ? T * P.reserva : 0;
     r.agua = agua - r.reserva;
     return r;
@@ -1397,7 +1400,10 @@
       L.push({ id: "b4", t: ["Bate igual que siempre. En agua algo ácida tarda un poco más: espera ", "~10 minutos", " a que espese."], ref: "Prueba María", reloj: true });
       L.push({ id: "l4", t: ["Mide el pH del gel terminado y apúntalo en el lote. Objetivo ", "5,5–6,5", "."] });
       L.push({ id: "l4b", t: ["Solo si quedó por debajo de 5,5: TEA pura de ", "0,10 g", " en 0,10 g, removiendo 2 min y midiendo cada vez, hasta ", "5,5", ". Tope ", fmt(r.lido * 0.2) + " g", ". Si se enturbia, para. Apunta los gramos de TEA."], ref: "Prueba: unos 0,8 g por 100 g para subir de 4,8 a 5,5 (cálculo, no medido)" });
-      L.push({ id: "mand", t: ["Esto es Analube BASE (sin colorante ni fragancia). Si este lote va a ser Analube MANDARINA, por cada litro: ", "10 gotas", " de colorante naranja + ", "2 tapas = 7,00 g", " de esencia de mandarina (en este lote: ", fmt(calc.total * 7 / 1020) + " g", "). Remueve lento. OJO: esta esencia enturbia el gel; en prueba con polisorbato 20."], ref: "1 tapa = 3,5 g (pesada por Kike, 18/11)" });
+      if (r.esen > 0) {
+        L.push({ id: "mand1", t: ["MANDARINA, al final con el gel ya espeso. En un vasito: ", g("esen"), " de esencia de mandarina + ", g("ps20"), " de polisorbato 20. Mezcla hasta que no se vean rayas."], ref: "Sin polisorbato la esencia enturbia el gel (18/11)" });
+        L.push({ id: "mand2", t: ["Échale unos ", "100 g", " del gel al vasito y mézclalo bien. Luego pásalo al resto y remueve LENTO, sin espuma. Añade ", String(Math.max(1, Math.round(calc.total / 1020 * 10))) + " gotas", " de colorante naranja (10 por litro)."], ref: "HEC subido a 1,35 % porque el polisorbato afloja el gel" });
+      } else L.push({ id: "mand", t: ["Esto es Analube BASE (sin colorante ni fragancia). Para mandarina elige «Sabor: Mandarina» arriba: la app añade la esencia, el polisorbato y sube el HEC."] });
       L.push({ id: "l5", t: ["Separa ", "20 g", " en un frasco a la nevera: es donde antes aparecerían los cristales."] });
       L.push({ id: "f1", t: ["Tapa y etiqueta: «LAB · NO USAR · LIDOCAÍNA · fecha». No se prueba en piel ni en mucosa."], ref: "Regla 6" });
       L.push({ id: "f2", t: ["Foto contra fondo oscuro. Guarda el lote aquí abajo y revisa cristales a 24 h, 72 h y 7 días."] });
@@ -1501,7 +1507,7 @@
     $("#r-" + calc.rid).checked = true;
     $("#c-total").value = String(calc.total).replace(".", ","); $("#c-agua").value = calc.agua; $("#c-quien").value = calc.quien; $("#c-cambio").value = calc.cambio;
     $("#c-lido").value = String(calc.lidoPct);
-    $("#c-lidoA").value = String(calc.lidoAnal); $("#c-cons").value = calc.cons;
+    $("#c-lidoA").value = String(calc.lidoAnal); $("#c-cons").value = calc.cons; $("#c-sabor").value = calc.sabor === "mand" ? "mand" : "base";
     pintaSerie(); renderCalc();
   }
   $("#c-serie-quitar").addEventListener("click", () => { calc.serie = null; calc.cambio = ""; $("#c-cambio").value = ""; guardarCalc(); pintaSerie(); });
@@ -1521,9 +1527,10 @@
   $("#c-agua").addEventListener("change", (e) => { calc.agua = e.target.value; guardarCalc(); renderCalc(); });
   $("#c-lido").value = String(calc.lidoPct);
   $("#c-lido").addEventListener("change", (e) => { calc.lidoPct = parseFloat(e.target.value) || 5; calc.reales = {}; guardarCalc(); renderCalc(); });
-  $("#c-lidoA").value = String(calc.lidoAnal); $("#c-cons").value = calc.cons;
+  $("#c-lidoA").value = String(calc.lidoAnal); $("#c-cons").value = calc.cons; $("#c-sabor").value = calc.sabor === "mand" ? "mand" : "base";
   $("#c-lidoA").addEventListener("change", (e) => { calc.lidoAnal = e.target.value === "7" ? 7 : 5; calc.reales = {}; guardarCalc(); renderCalc(); });
   $("#c-cons").addEventListener("change", (e) => { calc.cons = ["mp", "metil"].includes(e.target.value) ? e.target.value : "benz"; calc.reales = {}; calc.checks = {}; guardarCalc(); renderCalc(); });
+  $("#c-sabor").addEventListener("change", (e) => { calc.sabor = e.target.value === "mand" ? "mand" : "base"; calc.reales = {}; calc.checks = {}; guardarCalc(); renderCalc(); });
   $("#c-quien").addEventListener("input", (e) => { calc.quien = e.target.value; guardarCalc(); });
   $("#c-cambio").addEventListener("input", (e) => { calc.cambio = e.target.value; guardarCalc(); });
   $("#c-reset").addEventListener("click", () => {
@@ -1541,7 +1548,7 @@
     for (const k of orden(calc.rid)) {
       if (!(r[k] > 0)) continue;
       const real = num(calc.reales[k]);
-      const corto = { metil: "metilparabeno", propil: "propilparabeno", banoAgua: "baño agua", banoAlg: "alginato", lactato: "lactato Ca", cacao: "manteca cacao", coco: "aceite coco", almendras: "almendras", vitE: "vit. E", aroma: "aroma", agua: "agua", alcohol: "alcohol 96°", lido: "lidocaína", citL: "cítrico (lidocaína)", reserva: "agua solución", arg: "arginina", cit: "cítrico", hec: "HEC", gli: "glicerina", pg: "PG", menta: "sol. menta", benz: "benzoato" }[k];
+      const corto = { metil: "metilparabeno", propil: "propilparabeno", banoAgua: "baño agua", banoAlg: "alginato", lactato: "lactato Ca", cacao: "manteca cacao", coco: "aceite coco", almendras: "almendras", vitE: "vit. E", aroma: "aroma", agua: "agua", alcohol: "alcohol 96°", lido: "lidocaína", citL: "cítrico (lidocaína)", reserva: "agua solución", arg: "arginina", cit: "cítrico", hec: "HEC", gli: "glicerina", pg: "PG", menta: "sol. menta", benz: "benzoato", esen: "esencia", ps20: "polisorbato 20" }[k];
       partes.push(corto + " " + fmt(real ?? r[k]));
       if (real == null) sinReal.push(corto);
     }
@@ -1553,7 +1560,7 @@
       const extra = serie ? { serie: serie.id, semana: serie.semana } : {};
       await db.collection("lotes").doc().set({
         ...extra,
-        fecha: hoy(), quien: calc.quien.trim(), titulo: (serie ? "Semana " + serie.semana + " · " : "") + RECETAS[calc.rid] + (calc.rid === "spray" ? " " + String(calc.lidoPct).replace(".", ",") + " %" : "") + (calc.rid === "anal" ? " " + calc.lidoAnal + " %" + (calc.cons === "mp" ? " · metil + propil" : calc.cons === "metil" ? " · metilparabeno" : "") : "") + " · " + fmt(T).replace(",00", "") + " g",
+        fecha: hoy(), quien: calc.quien.trim(), titulo: (serie ? "Semana " + serie.semana + " · " : "") + RECETAS[calc.rid] + (calc.rid === "spray" ? " " + String(calc.lidoPct).replace(".", ",") + " %" : "") + (calc.rid === "anal" ? " " + calc.lidoAnal + " %" + (calc.cons === "mp" ? " · metil + propil" : calc.cons === "metil" ? " · metilparabeno" : "") + (calc.sabor === "mand" ? " · mandarina" : "") : "") + " · " + fmt(T).replace(",00", "") + " g",
         cambio: calc.cambio.trim(), pesos, agua: calc.agua, ph: null, resultado: "", estado: "dato", leccion: "",
         fotos: [], seguimiento: [], revisiones: { h24: false, d7: false }, receta: calc.rid, total: T,
         pasosHechos: Object.keys(calc.checks).filter((k) => calc.checks[k]).length,
