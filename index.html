@@ -511,7 +511,7 @@
       <div class="campo"><label for="c-total">Tamaño del lote (g) · 1 L ≈ 1 020 g, 5 L ≈ 5 100 g</label><input id="c-total" type="text" value="1020" inputmode="decimal" placeholder="Ej. 5100"></div>
       <div class="campo"><label for="c-lidoA">Lidocaína</label><select id="c-lidoA"><option value="5">50 g por litro (≈ 4,9 %)</option><option value="7">70 g por litro (≈ 6,9 %)</option></select></div>
       <div class="campo"><label for="c-cons">Conservante</label><select id="c-cons"><option value="mp">Metil 0,20 % + propilparabeno 0,02 % (el nuevo)</option><option value="metil">Metilparabeno 0,25 % solo</option><option value="benz">Benzoato de sodio 0,10 % (el de antes)</option></select></div>
-      <div class="campo"><label for="c-sabor">Sabor</label><select id="c-sabor"><option value="base">Analube base (sin sabor ni color)</option><option value="mand">Mandarina (esencia + polisorbato 20 2:1, HEC 1,35 %)</option></select></div>
+      <div class="campo"><label for="c-sabor">Sabor</label><select id="c-sabor"><option value="base">Analube base (sin sabor ni color)</option><option value="mand">Mandarina (esencia + polisorbato 20 2:1)</option></select></div>
       <div class="campo"><label for="c-agua">Agua</label><select id="c-agua"><option>Destilada</option><option>Desmineralizada</option><option>Grifo</option><option>Hervida</option><option>De mesa</option></select></div>
       <div class="campo"><label for="c-quien">Quién lo hace</label><input id="c-quien" list="personas" placeholder="Kike"></div>
       <div class="campo" id="c-lido-wrap" hidden><label for="c-lido">Lidocaína (%)</label><select id="c-lido"><option value="5">5 % (V0.1)</option><option value="7.5">7,5 %</option><option value="10">10 % (como los comerciales)</option></select></div>
@@ -1332,7 +1332,7 @@
     const metil = conLido && (calc.cons === "metil" || calc.cons === "mp");
     const mp = conLido && calc.cons === "mp";
     const mand = conLido && calc.sabor === "mand";
-    const r = { hec: T * (conLido ? (mand ? 0.0135 : 0.0125) : P.hec), esen: mand ? T * 3.5 / 1020 : 0, ps20: mand ? T * 3.5 * 2 / 1020 : 0, gli: T * P.gli, arg: conArg ? T * P.arg : 0, cit: conArg ? T * P.cit : 0, menta: conMenta ? T * P.menta : 0,
+    const r = { hec: T * (conLido ? 0.0125 : P.hec), esen: mand ? T * 3.5 / 1020 : 0, ps20: mand ? T * 3.5 * 2 / 1020 : 0, gli: T * P.gli, arg: conArg ? T * P.arg : 0, cit: conArg ? T * P.cit : 0, menta: conMenta ? T * P.menta : 0,
       lido: conLido ? T * lidoF : 0, citL: conLido ? T * lidoF * 0.36 : 0, benz: metil ? 0 : T * P.benz, metil: metil ? T * (mp ? 0.0020 : 0.0025) : 0, propil: mp ? T * 0.0002 : 0 };
     const pgTotal = T * P.pg;
     r.pg = pgTotal - r.menta;
@@ -1402,8 +1402,8 @@
       L.push({ id: "l4b", t: ["Solo si quedó por debajo de 5,5: TEA pura de ", "0,10 g", " en 0,10 g, removiendo 2 min y midiendo cada vez, hasta ", "5,5", ". Tope ", fmt(r.lido * 0.2) + " g", ". Si se enturbia, para. Apunta los gramos de TEA."], ref: "Prueba: unos 0,8 g por 100 g para subir de 4,8 a 5,5 (cálculo, no medido)" });
       if (r.esen > 0) {
         L.push({ id: "mand1", t: ["MANDARINA, al final con el gel ya espeso. En un vasito: ", g("esen"), " de esencia de mandarina + ", g("ps20"), " de polisorbato 20. Mezcla hasta que no se vean rayas."], ref: "Sin polisorbato la esencia enturbia el gel (18/11)" });
-        L.push({ id: "mand2", t: ["Échale unos ", "100 g", " del gel al vasito y mézclalo bien. Luego pásalo al resto y remueve LENTO, sin espuma. Añade ", String(Math.max(1, Math.round(calc.total / 1020 * 10))) + " gotas", " de colorante naranja (10 por litro)."], ref: "HEC subido a 1,35 % porque el polisorbato afloja el gel" });
-      } else L.push({ id: "mand", t: ["Esto es Analube BASE (sin colorante ni fragancia). Para mandarina elige «Sabor: Mandarina» arriba: la app añade la esencia, el polisorbato y sube el HEC."] });
+        L.push({ id: "mand2", t: ["Échale unos ", "100 g", " del gel al vasito y mézclalo bien. Luego pásalo al resto y remueve LENTO, sin espuma. Añade ", String(Math.max(1, Math.round(calc.total / 1020 * 10))) + " gotas", " de colorante naranja (10 por litro)."], ref: "HEC 1,25 % igual que la base (Kike, 19/11)" });
+      } else L.push({ id: "mand", t: ["Esto es Analube BASE (sin colorante ni fragancia). Para mandarina elige «Sabor: Mandarina» arriba: la app añade la esencia y el polisorbato."] });
       L.push({ id: "l5", t: ["Separa ", "20 g", " en un frasco a la nevera: es donde antes aparecerían los cristales."] });
       L.push({ id: "f1", t: ["Tapa y etiqueta: «LAB · NO USAR · LIDOCAÍNA · fecha». No se prueba en piel ni en mucosa."], ref: "Regla 6" });
       L.push({ id: "f2", t: ["Foto contra fondo oscuro. Guarda el lote aquí abajo y revisa cristales a 24 h, 72 h y 7 días."] });
