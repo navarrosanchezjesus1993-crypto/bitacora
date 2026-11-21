@@ -348,6 +348,43 @@
 
   .snack { position: fixed; left: 16px; right: 16px; bottom: calc(16px + env(safe-area-inset-bottom, 0px)); z-index: 40; max-width: 560px; margin: 0 auto; background: var(--inverse-surface); color: var(--inverse-on-surface); padding: 14px 16px; border-radius: 4px; font-size: .875rem; box-shadow: var(--shadow-3); }
 
+  /* Modo video receta */
+  .btn-video { display: inline-flex; align-items: center; gap: 8px; margin: 0 0 12px; }
+  .video { position: fixed; inset: 0; z-index: 60; background: #0d1414; color: #eef6f6; display: grid; grid-template-rows: auto 1fr auto; padding: calc(12px + env(safe-area-inset-top, 0px)) 16px calc(16px + env(safe-area-inset-bottom, 0px)); }
+  .video[hidden] { display: none; }
+  .video .barras { display: flex; gap: 4px; }
+  .video .barras span { flex: 1; height: 4px; border-radius: 2px; background: rgba(255,255,255,.25); overflow: hidden; }
+  .video .barras i { display: block; height: 100%; width: 0; background: #4cd9e0; }
+  .video .cab { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; font-size: .85rem; color: #a9c4c4; }
+  .video .escena { display: grid; align-content: center; justify-items: center; gap: 18px; text-align: center; max-width: 620px; margin: 0 auto; width: 100%; overflow-y: auto; }
+  .video .dibujo { width: min(56vw, 240px); aspect-ratio: 1; color: #4cd9e0; }
+  .video .num { font-size: .8rem; letter-spacing: .12em; text-transform: uppercase; color: #ffb59a; font-weight: 700; }
+  .video .texto { font-size: clamp(1.15rem, 4.6vw, 1.6rem); line-height: 1.35; }
+  .video .texto b { color: #4cd9e0; font-family: var(--mono); white-space: nowrap; }
+  .video .nota { font-size: .85rem; color: #a9c4c4; }
+  .video .ingr { list-style: none; padding: 0; margin: 0; display: grid; gap: 6px; text-align: left; font-size: 1rem; width: 100%; }
+  .video .ingr li { display: flex; justify-content: space-between; gap: 12px; border-bottom: 1px solid rgba(255,255,255,.12); padding: 4px 0; }
+  .video .ingr b { font-family: var(--mono); color: #4cd9e0; white-space: nowrap; }
+  .video .mandos { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
+  .video .mandos button { background: rgba(255,255,255,.12); color: inherit; border: 0; border-radius: 999px; min-width: 52px; height: 52px; font-size: 1.2rem; cursor: pointer; padding: 0 14px; }
+  .video .mandos button.prin { background: #4cd9e0; color: #00373a; }
+  .video .escena.entra { animation: vEntra .5s ease both; }
+  @keyframes vEntra { from { opacity: 0; transform: translateY(16px); } }
+  .video svg .agua { animation: vLlena 3s ease-in-out infinite alternate; transform-box: fill-box; transform-origin: 50% 100%; }
+  @keyframes vLlena { from { transform: scaleY(.35); } to { transform: scaleY(1); } }
+  .video svg .gira { animation: vGira 2.4s linear infinite; transform-box: fill-box; transform-origin: center; }
+  @keyframes vGira { to { transform: rotate(360deg); } }
+  .video svg .cae { animation: vCae 1.4s ease-in infinite; }
+  .video svg .cae:nth-child(2) { animation-delay: .45s; }
+  .video svg .cae:nth-child(3) { animation-delay: .9s; }
+  @keyframes vCae { from { transform: translateY(-30px); opacity: 0; } 30% { opacity: 1; } to { transform: translateY(40px); opacity: 0; } }
+  .video svg .inclina { animation: vInclina 2.4s ease-in-out infinite alternate; transform-box: fill-box; transform-origin: 10% 90%; }
+  @keyframes vInclina { from { transform: rotate(0); } to { transform: rotate(-35deg); } }
+  .video svg .late { animation: vLate 1.2s ease-in-out infinite alternate; transform-box: fill-box; transform-origin: center; }
+  @keyframes vLate { from { transform: scale(.92); opacity: .7; } to { transform: scale(1.06); opacity: 1; } }
+  .video svg .bate { animation: vBate 1s ease-in-out infinite alternate; transform-box: fill-box; transform-origin: 50% 0; }
+  @keyframes vBate { from { transform: rotate(-18deg); } to { transform: rotate(18deg); } }
+  @media (prefers-reduced-motion: reduce) { .video svg * { animation: none !important; } .video .escena.entra { animation: none; } }
   @media (max-width: 640px) {
     body { padding-block: env(safe-area-inset-top, 0px) calc(96px + env(safe-area-inset-bottom, 0px)); }
     .appbar .fila { min-height: 56px; padding: 6px 12px; }
@@ -446,6 +483,11 @@
 </style>
 </head>
 <body>
+<div class="video" id="video" hidden role="dialog" aria-label="Receta en video">
+  <div><div class="barras" id="video-barras"></div><div class="cab"><span id="video-cuenta"></span><span>Receta en video</span></div></div>
+  <div class="escena" id="video-escena"></div>
+  <div class="mandos"><button type="button" id="video-ant" aria-label="Paso anterior">⏮</button><button type="button" class="prin" id="video-play" aria-label="Pausa o seguir">❚❚</button><button type="button" id="video-sig" aria-label="Paso siguiente">⏭</button><button type="button" id="video-voz" aria-label="Voz sí o no">🔊</button><button type="button" id="video-cerrar" aria-label="Cerrar">✕</button></div>
+</div>
 
 <header class="appbar" id="appbar">
   <div class="fila">
@@ -503,7 +545,7 @@
     <div class="recetas" role="radiogroup" aria-label="Qué vas a hacer">
       <label class="receta" hidden><input type="radio" name="receta" value="base" id="r-base"><b>Fórmula base</b><span>Agua, HEC, glicerina, PG y benzoato.</span></label>
       <label class="receta" hidden><input type="radio" name="receta" value="arg" id="r-arg"><b>Multiorgásmico</b><span>Fórmula base + L-arginina al 0,5 % con su cítrico.</span></label>
-      <label class="receta"><input type="radio" name="receta" value="anal" id="r-anal" checked><b>Analube base</b><span>Sin colorante ni fragancia. Gel de HEC con lidocaína disuelta con cítrico en agua tibia. pH objetivo 5,5–6,5. Prototipo 🟠.</span></label>
+      <label class="receta"><input type="radio" name="receta" value="anal" id="r-anal" checked><b>Analube</b><span>Con saborizante y colorante. Gel de HEC con lidocaína disuelta con cítrico en agua tibia. pH objetivo 5,5–6,5. Prototipo 🟠.</span></label>
       <label class="receta" hidden><input type="radio" name="receta" value="spray" id="r-spray"><b>Spray retardante</b><span>Lidocaína al 10 % en alcohol 96°, PG, glicerina y agua.</span></label>
       <label class="receta" hidden><input type="radio" name="receta" value="cascara" id="r-cascara"><b>Esferas</b><span>Gel con lactato de calcio al 3 % y baño de alginato al 1 %.</span></label>
     </div>
@@ -511,7 +553,6 @@
       <div class="campo"><label for="c-total">Tamaño del lote (g) · 1 L ≈ 1 020 g, 5 L ≈ 5 100 g</label><input id="c-total" type="text" value="1020" inputmode="decimal" placeholder="Ej. 5100"></div>
       <div class="campo"><label for="c-lidoA">Lidocaína</label><select id="c-lidoA"><option value="5">50 g por litro (≈ 4,9 %)</option><option value="7">70 g por litro (≈ 6,9 %)</option></select></div>
       <div class="campo"><label for="c-cons">Conservante</label><select id="c-cons"><option value="mp">Metil 0,20 % + propilparabeno 0,02 % (el nuevo)</option><option value="metil">Metilparabeno 0,25 % solo</option><option value="benz">Benzoato de sodio 0,10 % (el de antes)</option></select></div>
-      <div class="campo"><label for="c-sabor">Sabor</label><select id="c-sabor"><option value="base">Analube base (sin sabor ni color)</option><option value="mand">Mandarina (esencia + polisorbato 20 2:1)</option></select></div>
       <div class="campo"><label for="c-agua">Agua</label><select id="c-agua"><option>Destilada</option><option>Desmineralizada</option><option>Grifo</option><option>Hervida</option><option>De mesa</option></select></div>
       <div class="campo"><label for="c-quien">Quién lo hace</label><input id="c-quien" list="personas" placeholder="Kike"></div>
       <div class="campo" id="c-lido-wrap" hidden><label for="c-lido">Lidocaína (%)</label><select id="c-lido"><option value="5">5 % (V0.1)</option><option value="7.5">7,5 %</option><option value="10">10 % (como los comerciales)</option></select></div>
@@ -528,6 +569,7 @@
     </div>
     <div class="seccion">
       <h2>Paso a paso</h2>
+      <button class="btn btn-video" type="button" id="btn-video">▶ Ver la receta en video</button>
       <ol class="pasos" id="c-pasos"></ol>
     </div>
     <div class="card alta">
@@ -1269,7 +1311,7 @@
     lido: "Lidocaína base", citL: "Ácido cítrico para la lidocaína (inicial)", alcohol: "Alcohol etílico 96°",
     agua: "Agua del bowl (para la lidocaína)", reserva: "Agua (para disolver el activo)", arg: "L-arginina",
     cit: "Ácido cítrico (dosis inicial)", hec: "HEC (Cellosize QP100)", gli: "Glicerina", pg: "Propilenglicol (disuelve el conservante)", menta: "Solución madre de menta",
-    benz: "Benzoato de sodio (conservante, en el agua)", metil: "Metilparabeno (conservante, en la taza con glicerina y PG)", propil: "Propilparabeno (conservante, con el metil)", aguaR: "Agua reservada (para hidratar el HEC)", esen: "Esencia de mandarina (1 tapa = 3,5 g por litro)", ps20: "Polisorbato 20 (2 g por gramo de esencia)"
+    benz: "Benzoato de sodio (conservante, en el agua)", metil: "Metilparabeno (conservante, en la taza con glicerina y PG)", propil: "Propilparabeno (conservante, con el metil)", aguaR: "Agua reservada (para hidratar el HEC)", esen: "Saborizante (1 tapa = 3,5 g por litro)", ps20: "Polisorbato 20 (2 g por gramo de esencia)"
   };
   const ORDEN_GEL = ["agua", "aguaR", "benz", "lido", "citL", "reserva", "arg", "cit", "metil", "propil", "hec", "gli", "pg", "menta", "esen", "ps20"];
   const ORDEN_SPRAY = ["alcohol", "lido", "pg", "gli", "agua"];
@@ -1294,7 +1336,6 @@
     }
   } catch (_) { Object.assign(calc, { total: 1530, lidoAnal: 7, cons: "mp" }); }
   if (calc.lidoAnal !== 7) calc.lidoAnal = 5;
-  if (calc.sabor !== "mand") calc.sabor = "base";
   if (!["mp", "metil", "benz"].includes(calc.cons)) calc.cons = "benz";
 
   function calcular(rid, T) {
@@ -1331,7 +1372,8 @@
     const lidoF = (calc.lidoAnal === 7 ? 70 : 50) / 1020;
     const metil = conLido && (calc.cons === "metil" || calc.cons === "mp");
     const mp = conLido && calc.cons === "mp";
-    const mand = conLido && calc.sabor === "mand";
+    // 21/11 (Kike): todos los Analube llevan saborizante + colorante; ya no hay base/mandarina
+    const mand = conLido;
     const r = { hec: T * (conLido ? 0.0125 : P.hec), esen: mand ? T * 3.5 / 1020 : 0, ps20: mand ? T * 3.5 * 2 / 1020 : 0, gli: T * P.gli, arg: conArg ? T * P.arg : 0, cit: conArg ? T * P.cit : 0, menta: conMenta ? T * P.menta : 0,
       lido: conLido ? T * lidoF : 0, citL: conLido ? T * lidoF * 0.36 : 0, benz: metil ? 0 : T * P.benz, metil: metil ? T * (mp ? 0.0020 : 0.0025) : 0, propil: mp ? T * 0.0002 : 0 };
     const pgTotal = T * P.pg;
@@ -1416,9 +1458,9 @@
       L.push({ id: "l4", t: ["Mide el pH del gel terminado y apúntalo en el lote. Objetivo ", "5,5–6,5", "."] });
       L.push({ id: "l4b", t: ["Solo si quedó por debajo de 5,5: TEA pura de ", "0,10 g", " en 0,10 g, removiendo 2 min y midiendo cada vez, hasta ", "5,5", ". Tope ", fmt(r.lido * 0.2) + " g", ". Si se enturbia, para. Apunta los gramos de TEA."], ref: "Prueba: unos 0,8 g por 100 g para subir de 4,8 a 5,5 (cálculo, no medido)" });
       if (r.esen > 0) {
-        L.push({ id: "mand1", t: ["MANDARINA, al final con el gel ya espeso. En un vasito: ", g("esen"), " de esencia de mandarina + ", g("ps20"), " de polisorbato 20. Mezcla hasta que no se vean rayas."], ref: "Sin polisorbato la esencia enturbia el gel (18/11)" });
-        L.push({ id: "mand2", t: ["Échale unos ", "100 g", " del gel al vasito y mézclalo bien. Luego pásalo al resto y remueve LENTO, sin espuma. Añade ", String(Math.max(1, Math.round(calc.total / 1020 * 10))) + " gotas", " de colorante naranja (10 por litro)."], ref: "HEC 1,25 % igual que la base (Kike, 19/11)" });
-      } else L.push({ id: "mand", t: ["Esto es Analube BASE (sin colorante ni fragancia). Para mandarina elige «Sabor: Mandarina» arriba: la app añade la esencia y el polisorbato."] });
+        L.push({ id: "mand1", t: ["SABOR, al final con el gel ya espeso. En un vasito: ", g("esen"), " de saborizante + ", g("ps20"), " de polisorbato 20. Mezcla hasta que no se vean rayas."], ref: "Sin polisorbato la esencia enturbia el gel (18/11)" });
+        L.push({ id: "mand2", t: ["Échale unos ", "100 g", " del gel al vasito y mézclalo bien. Luego pásalo al resto y remueve LENTO, sin espuma. Añade ", String(Math.max(1, Math.round(calc.total / 1020 * 10))) + " gotas", " de colorante (10 por litro)."], ref: "Dosis medida con la esencia de mandarina (1 tapa = 3,5 g). Con otro sabor, revisa que huela y que quede transparente" });
+      }
       L.push({ id: "l5", t: ["Separa ", "20 g", " en un frasco a la nevera: es donde antes aparecerían los cristales."] });
       L.push({ id: "f1", t: ["Tapa y etiqueta: «LAB · NO USAR · LIDOCAÍNA · fecha». No se prueba en piel ni en mucosa."], ref: "Regla 6" });
       L.push({ id: "f2", t: ["Foto contra fondo oscuro. Guarda el lote aquí abajo y revisa cristales a 24 h, 72 h y 7 días."] });
@@ -1513,6 +1555,87 @@
       return li;
     }));
   }
+  // ── Modo video receta (21/11): los mismos pasos de la app, en pantalla completa, con dibujo y voz ──
+  const VSVG = {
+    pesar: '<svg viewBox="0 0 200 200" fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"><rect x="30" y="140" width="140" height="34" rx="8"/><rect x="70" y="150" width="60" height="14" rx="3" class="late" fill="currentColor" stroke="none" opacity=".5"/><path d="M45 140h110"/><g class="late"><path d="M68 70h64l-8 66H76z"/><path d="M80 92h40" opacity=".6"/></g></svg>',
+    bowl: '<svg viewBox="0 0 200 200" fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round"><clipPath id="vclip"><path d="M30 80h140c0 50-30 86-70 86S30 130 30 80z"/></clipPath><rect class="agua" x="20" y="80" width="160" height="90" fill="currentColor" opacity=".35" stroke="none" clip-path="url(#vclip)"/><path d="M30 80h140c0 50-30 86-70 86S30 130 30 80z"/><path d="M100 20v40" class="cae"/></svg>',
+    micro: '<svg viewBox="0 0 200 200" fill="none" stroke="currentColor" stroke-width="6" stroke-linejoin="round"><rect x="20" y="45" width="160" height="110" rx="12"/><rect x="34" y="60" width="100" height="80" rx="6" class="late" fill="currentColor" opacity=".18"/><ellipse cx="84" cy="122" rx="34" ry="8" class="gira" stroke-dasharray="14 10"/><circle cx="158" cy="80" r="7"/><path d="M150 108h16M150 124h16"/></svg>',
+    mirar: '<svg viewBox="0 0 200 200" fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round"><circle cx="100" cy="100" r="64" opacity=".35"/><path d="M40 100s24-40 60-40 60 40 60 40-24 40-60 40-60-40-60-40z"/><circle cx="100" cy="100" r="16" class="late" fill="currentColor"/><path d="M150 40l8-8M164 60h12M136 28V16" class="late"/></svg>',
+    verter: '<svg viewBox="0 0 200 200" fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"><path d="M30 120h120c0 34-24 56-60 56s-60-22-60-56z"/><g class="inclina"><path d="M112 30h52l-6 56h-40z"/></g><path d="M112 70c-6 14-14 30-20 44" opacity=".7" class="late"/></svg>',
+    polvo: '<svg viewBox="0 0 200 200" fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round"><path d="M30 120h140c0 34-30 56-70 56s-70-22-70-56z"/><g fill="currentColor" stroke="none"><circle class="cae" cx="84" cy="60" r="5"/><circle class="cae" cx="102" cy="52" r="5"/><circle class="cae" cx="118" cy="62" r="5"/></g><path d="M70 30h60"/></svg>',
+    batir: '<svg viewBox="0 0 200 200" fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round"><path d="M30 110h140c0 38-30 64-70 64s-70-26-70-64z"/><rect x="38" y="110" width="124" height="20" fill="currentColor" opacity=".3" stroke="none" class="late"/><g class="bate"><path d="M100 20v70"/><path d="M100 90c-16 0-22 30 0 40 22-10 16-40 0-40z"/></g></svg>',
+    ph: '<svg viewBox="0 0 200 200" fill="none" stroke="currentColor" stroke-width="6" stroke-linejoin="round"><rect x="70" y="20" width="60" height="110" rx="10"/><rect x="80" y="34" width="40" height="30" rx="4" class="late" fill="currentColor" opacity=".35"/><path d="M92 130v40l8 10 8-10v-40"/></svg>',
+    gotas: '<svg viewBox="0 0 200 200" fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round"><path d="M30 120h140c0 34-30 56-70 56s-70-22-70-56z"/><g fill="#ffb59a" stroke="none"><path class="cae" d="M80 50c-8 12-8 20 0 20s8-8 0-20z"/><path class="cae" d="M100 44c-8 12-8 20 0 20s8-8 0-20z"/><path class="cae" d="M120 50c-8 12-8 20 0 20s8-8 0-20z"/></g></svg>',
+    frasco: '<svg viewBox="0 0 200 200" fill="none" stroke="currentColor" stroke-width="6" stroke-linejoin="round"><rect x="62" y="24" width="76" height="22" rx="4"/><path d="M56 46h88v120a14 14 0 0 1-14 14H70a14 14 0 0 1-14-14z"/><rect x="66" y="96" width="68" height="38" rx="4" class="late" fill="currentColor" opacity=".3"/></svg>',
+    listo: '<svg viewBox="0 0 200 200" fill="none" stroke="currentColor" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"><circle cx="100" cy="100" r="70" class="late"/><path d="M66 102l24 24 46-50"/></svg>'
+  };
+  const VDIB = { k1: "pesar", k2: "bowl", k3: "micro", l2c: "mirar", k4: "micro", k5: "verter", k6: "polvo", k7: "batir", l4: "ph", l4b: "ph", mand1: "verter", mand2: "gotas", mand: "frasco", l5: "frasco", f1: "frasco", f2: "frasco" };
+  const vid = { i: 0, esc: [], t: null, pausa: false, voz: true, ini: 0, dur: 0, raf: 0 };
+  const vHablable = (s) => String(s)
+    .replace(/(\d+),(\d+)\s*g\b/g, (_, a, b) => a + (/^0+$/.test(b) ? "" : " coma " + b.replace(/0+$/, "")) + " gramos")
+    .replace(/(\d+)\s*g\b/g, "$1 gramos").replace(/\bPG\b/g, "pe ge").replace(/\bHEC\b/g, "hache e ce").replace(/°C/g, " grados").replace(/[«»]/g, "");
+  function vEscenas() {
+    const T = Math.max(1, Math.min(200000, calc.total || 252));
+    const r = calcular(calc.rid, T);
+    const nombre = (calc.rid === "anal" ? "Analube" : RECETAS[calc.rid]) + " · " + fmt(T).replace(",00", "") + " g";
+    const ingr = orden(calc.rid).filter((k) => r[k] > 0).map((k) => [nombreDe(calc.rid, k).replace(/\s*\(.*\)$/, ""), fmt(r[k]) + " g"]);
+    const esc = [{ tipo: "ingr", titulo: nombre, ingr, voz: "Receta de " + nombre.replace(" · ", ", lote de ") + ". Ten todo listo antes de empezar." }];
+    pasos(calc.rid, r).forEach((p, n) => esc.push({ tipo: "paso", n: n + 1, dib: VDIB[p.id] || "frasco", t: p.t, ref: p.ref, voz: p.t.join("") }));
+    esc.push({ tipo: "fin", dib: "listo", t: ["¡Listo! Apunta el pH y guarda el lote en la app."], voz: "Listo. Apunta el pH y guarda el lote en la app." });
+    return esc;
+  }
+  function vPinta() {
+    const e = vid.esc[vid.i], cont = $("#video-escena");
+    $("#video-barras").replaceChildren(...vid.esc.map((_, j) => h("span", {}, h("i", { style: "width:" + (j < vid.i ? 100 : 0) + "%" }))));
+    $("#video-cuenta").textContent = (vid.i + 1) + " / " + vid.esc.length;
+    const kids = [];
+    if (e.tipo === "ingr") {
+      kids.push(h("div", { class: "num" }, "Necesitas"), h("div", { class: "texto" }, e.titulo), h("ul", { class: "ingr" }, e.ingr.map(([a, b]) => h("li", {}, h("span", {}, a), h("b", {}, b)))));
+    } else {
+      const d = h("div", { class: "dibujo" }); d.innerHTML = VSVG[e.dib];
+      kids.push(d);
+      if (e.tipo === "paso") kids.push(h("div", { class: "num" }, "Paso " + e.n));
+      kids.push(h("div", { class: "texto" }, e.t.map((x, i) => i % 2 ? h("b", {}, x) : x)));
+      if (e.ref) kids.push(h("div", { class: "nota" }, e.ref));
+    }
+    cont.replaceChildren(...kids); cont.classList.remove("entra"); void cont.offsetWidth; cont.classList.add("entra");
+    vArranca();
+  }
+  function vArranca() {
+    clearTimeout(vid.t); cancelAnimationFrame(vid.raf);
+    try { speechSynthesis.cancel(); } catch (_) {}
+    const e = vid.esc[vid.i];
+    $("#video-play").textContent = vid.pausa ? "▶" : "❚❚";
+    if (!e || $("#video").hidden) return;
+    const palabras = String(e.voz).split(/\s+/).length + (e.ingr ? e.ingr.length * 3 : 0);
+    vid.dur = Math.max(5000, palabras * 430 + 1500);
+    vid.ini = performance.now();
+    $("#video-play").textContent = vid.pausa ? "▶" : "❚❚";
+    if (vid.pausa) return;
+    let hablando = false;
+    if (vid.voz && "speechSynthesis" in window) {
+      try {
+        const u = new SpeechSynthesisUtterance(vHablable(e.voz) + (e.ingr ? ". " + e.ingr.map(([a, b]) => vHablable(a + ", " + b)).join(". ") : ""));
+        u.lang = "es-ES"; u.rate = 0.95;
+        const v = speechSynthesis.getVoices().find((x) => /^es/i.test(x.lang)); if (v) u.voice = v;
+        u.onend = () => { if (!vid.pausa && vid.esc[vid.i] === e) vid.t = setTimeout(vSig, 1200); };
+        speechSynthesis.speak(u); hablando = true;
+      } catch (_) { hablando = false; }
+    }
+    if (!hablando) vid.t = setTimeout(vSig, vid.dur);
+    const barra = () => { const b = $("#video-barras").children[vid.i]; if (b) b.firstChild.style.width = Math.min(100, (performance.now() - vid.ini) / vid.dur * 100) + "%"; if (!vid.pausa) vid.raf = requestAnimationFrame(barra); };
+    barra();
+  }
+  function vSig() { if (vid.i < vid.esc.length - 1) { vid.i++; vPinta(); } else { vid.pausa = true; vArranca(); } }
+  function vAnt() { if (vid.i > 0) vid.i--; vPinta(); }
+  function vAbrir() { vid.esc = vEscenas(); vid.i = 0; vid.pausa = false; $("#video").hidden = false; pantallaEncendida(true); vPinta(); }
+  function vCerrar() { clearTimeout(vid.t); cancelAnimationFrame(vid.raf); try { speechSynthesis.cancel(); } catch (_) {} $("#video").hidden = true; pantallaEncendida(false); }
+  $("#btn-video").addEventListener("click", vAbrir);
+  $("#video-cerrar").addEventListener("click", vCerrar);
+  $("#video-sig").addEventListener("click", vSig);
+  $("#video-ant").addEventListener("click", vAnt);
+  $("#video-play").addEventListener("click", () => { vid.pausa = !vid.pausa; vArranca(); });
+  $("#video-voz").addEventListener("click", () => { vid.voz = !vid.voz; $("#video-voz").textContent = vid.voz ? "🔊" : "🔇"; vArranca(); });
   function pintaSerie() {
     const s = calc.serie;
     $("#c-serie").hidden = !s;
@@ -1522,7 +1645,7 @@
     $("#r-" + calc.rid).checked = true;
     $("#c-total").value = String(calc.total).replace(".", ","); $("#c-agua").value = calc.agua; $("#c-quien").value = calc.quien; $("#c-cambio").value = calc.cambio;
     $("#c-lido").value = String(calc.lidoPct);
-    $("#c-lidoA").value = String(calc.lidoAnal); $("#c-cons").value = calc.cons; $("#c-sabor").value = calc.sabor === "mand" ? "mand" : "base";
+    $("#c-lidoA").value = String(calc.lidoAnal); $("#c-cons").value = calc.cons;
     pintaSerie(); renderCalc();
   }
   $("#c-serie-quitar").addEventListener("click", () => { calc.serie = null; calc.cambio = ""; $("#c-cambio").value = ""; guardarCalc(); pintaSerie(); });
@@ -1542,10 +1665,9 @@
   $("#c-agua").addEventListener("change", (e) => { calc.agua = e.target.value; guardarCalc(); renderCalc(); });
   $("#c-lido").value = String(calc.lidoPct);
   $("#c-lido").addEventListener("change", (e) => { calc.lidoPct = parseFloat(e.target.value) || 5; calc.reales = {}; guardarCalc(); renderCalc(); });
-  $("#c-lidoA").value = String(calc.lidoAnal); $("#c-cons").value = calc.cons; $("#c-sabor").value = calc.sabor === "mand" ? "mand" : "base";
+  $("#c-lidoA").value = String(calc.lidoAnal); $("#c-cons").value = calc.cons;
   $("#c-lidoA").addEventListener("change", (e) => { calc.lidoAnal = e.target.value === "7" ? 7 : 5; calc.reales = {}; guardarCalc(); renderCalc(); });
   $("#c-cons").addEventListener("change", (e) => { calc.cons = ["mp", "metil"].includes(e.target.value) ? e.target.value : "benz"; calc.reales = {}; calc.checks = {}; guardarCalc(); renderCalc(); });
-  $("#c-sabor").addEventListener("change", (e) => { calc.sabor = e.target.value === "mand" ? "mand" : "base"; calc.reales = {}; calc.checks = {}; guardarCalc(); renderCalc(); });
   $("#c-quien").addEventListener("input", (e) => { calc.quien = e.target.value; guardarCalc(); });
   $("#c-cambio").addEventListener("input", (e) => { calc.cambio = e.target.value; guardarCalc(); });
   $("#c-reset").addEventListener("click", () => {
@@ -1575,7 +1697,7 @@
       const extra = serie ? { serie: serie.id, semana: serie.semana } : {};
       await db.collection("lotes").doc().set({
         ...extra,
-        fecha: hoy(), quien: calc.quien.trim(), titulo: (serie ? "Semana " + serie.semana + " · " : "") + RECETAS[calc.rid] + (calc.rid === "spray" ? " " + String(calc.lidoPct).replace(".", ",") + " %" : "") + (calc.rid === "anal" ? " " + calc.lidoAnal + " %" + (calc.cons === "mp" ? " · metil + propil" : calc.cons === "metil" ? " · metilparabeno" : "") + (calc.sabor === "mand" ? " · mandarina" : "") : "") + " · " + fmt(T).replace(",00", "") + " g",
+        fecha: hoy(), quien: calc.quien.trim(), titulo: (serie ? "Semana " + serie.semana + " · " : "") + RECETAS[calc.rid] + (calc.rid === "spray" ? " " + String(calc.lidoPct).replace(".", ",") + " %" : "") + (calc.rid === "anal" ? " " + calc.lidoAnal + " %" + (calc.cons === "mp" ? " · metil + propil" : calc.cons === "metil" ? " · metilparabeno" : "") : "") + " · " + fmt(T).replace(",00", "") + " g",
         cambio: calc.cambio.trim(), pesos, agua: calc.agua, ph: null, resultado: "", estado: "dato", leccion: "",
         fotos: [], seguimiento: [], revisiones: { h24: false, d7: false }, receta: calc.rid, total: T,
         pasosHechos: Object.keys(calc.checks).filter((k) => calc.checks[k]).length,
