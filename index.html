@@ -1267,11 +1267,11 @@
     banoAgua: "Baño: agua desmineralizada", banoAlg: "Baño: alginato de sodio", lactato: "Lactato de calcio (disuelto aparte, al final)",
     cacao: "Manteca de cacao", coco: "Aceite de coco", almendras: "Aceite de almendras dulces", vitE: "Vitamina E (tocoferol)", aroma: "Aroma oleosoluble",
     lido: "Lidocaína base", citL: "Ácido cítrico para la lidocaína (inicial)", alcohol: "Alcohol etílico 96°",
-    agua: "Agua (vaso principal)", reserva: "Agua (para disolver el activo)", arg: "L-arginina",
+    agua: "Agua del bowl (para la lidocaína)", reserva: "Agua (para disolver el activo)", arg: "L-arginina",
     cit: "Ácido cítrico (dosis inicial)", hec: "HEC (Cellosize QP100)", gli: "Glicerina", pg: "Propilenglicol (disuelve el conservante)", menta: "Solución madre de menta",
-    benz: "Benzoato de sodio (conservante, en el agua)", metil: "Metilparabeno (conservante, disuelto en el PG tibio)", propil: "Propilparabeno (conservante, con el metil en el PG tibio)", esen: "Esencia de mandarina (1 tapa = 3,5 g por litro)", ps20: "Polisorbato 20 (2 g por gramo de esencia)"
+    benz: "Benzoato de sodio (conservante, en el agua)", metil: "Metilparabeno (conservante, en la taza con glicerina y PG)", propil: "Propilparabeno (conservante, con el metil)", aguaR: "Agua reservada (para hidratar el HEC)", esen: "Esencia de mandarina (1 tapa = 3,5 g por litro)", ps20: "Polisorbato 20 (2 g por gramo de esencia)"
   };
-  const ORDEN_GEL = ["agua", "benz", "lido", "citL", "reserva", "arg", "cit", "metil", "propil", "hec", "gli", "pg", "menta", "esen", "ps20"];
+  const ORDEN_GEL = ["agua", "aguaR", "benz", "lido", "citL", "reserva", "arg", "cit", "metil", "propil", "hec", "gli", "pg", "menta", "esen", "ps20"];
   const ORDEN_SPRAY = ["alcohol", "lido", "pg", "gli", "agua"];
   const ORDEN_BOLAS = ["cacao", "coco", "almendras", "vitE", "aroma"];
   const ORDEN_CASCARA = ["banoAgua", "banoAlg", "agua", "benz", "hec", "gli", "pg", "reserva", "lactato"];
@@ -1339,6 +1339,9 @@
     const agua = T - (r.hec + r.gli + pgTotal + r.arg + r.cit + r.lido + r.citL + r.benz + r.metil + r.propil + r.esen + r.ps20);
     r.reserva = conArg ? T * P.reserva : 0;
     r.agua = agua - r.reserva;
+    // Kike (21/11): 1 000 g de agua para la lidocaína por cada 1 530 g de lote; el resto se reserva para el HEC
+    r.aguaR = 0;
+    if (conLido && metil) { r.aguaR = Math.max(0, r.agua - T * 1000 / 1530); r.agua -= r.aguaR; }
     return r;
   }
   function pasos(rid, r) {
@@ -1384,6 +1387,17 @@
     if (rid === "menta") L.push({ id: "m0", t: ["¿Tienes la solución madre de menta? Si no: ", "1 gota", " de menta en ", "20,00 g", " de PG, en frasco ámbar. Agita hasta que quede transparente. Si sale turbia, no la uses."], ref: "Truco 6" });
     if (rid === "anal") {
       const conMetil = r.metil > 0;
+      if (conMetil) {
+      // Proceso real de Kike (21/11): agua de lidocaína + agua reservada donde se hidrata el HEC
+      L.push({ id: "k1", t: ["Ponte guantes. Pesa en tazas de cristal ", g("lido"), " de lidocaína base y ", g("citL"), " de ácido cítrico."], ref: "Cítrico: tope " + fmt(r.lido * 0.40) + " g (0,40 g por g de lidocaína)" });
+      L.push({ id: "k2", t: ["Pesa ", g("agua"), " de agua en el bowl de cristal. Aparte, reserva ", g("aguaR"), " de agua para el HEC."] });
+      L.push({ id: "k3", t: ["Echa TODO el cítrico al agua del bowl y remueve. Luego la lidocaína en 4 partes. Microondas 1 min, remueve 1 min, y repite hasta que se integre."], ref: "Que no hierva: si se calienta de más, la lidocaína se funde en gotas grandes y tarda más" });
+      L.push({ id: "l2c", t: ["ANTES DE SEGUIR: mira el agua a contraluz. Tiene que estar TRANSPARENTE, sin ninguna gotita de aceite. Si las gotas no se van, añade cítrico de ", "0,10 g", " en 0,10 g sin pasar del tope y apunta el total."], ref: "Si el HEC entra con gotitas, quedan como burbujas y la dosis no sale pareja (14/11)" });
+      L.push({ id: "k4", t: ["En una taza de cristal: ", g("metil"), " de metilparabeno", ...(r.propil > 0 ? [" + ", g("propil"), " de propilparabeno"] : []), " + ", g("gli"), " de glicerina + ", g("pg"), " de PG. Revuelve, microondas 30 s y revuelve hasta que no quede polvo blanco."], ref: "Si queda polvo, otros 10–15 s: el parabeno necesita calor para entrar" });
+      L.push({ id: "k5", t: ["Echa esa mezcla de conservantes al agua reservada (", g("aguaR"), ") y remueve."] });
+      L.push({ id: "k6", t: ["Añade ", g("hec"), " de HEC a esa agua reservada y deja que se hidrate, removiendo hasta que no queden grumos."] });
+      L.push({ id: "k7", t: ["Echa el agua con HEC al bowl con la lidocaína y revuelve hasta que espese."], reloj: true });
+      } else {
       L.push({ id: "l0", t: conMetil
         ? ["Ponte guantes. Pesa ", g("agua"), " de agua en el vaso principal (nada de grifo). SIN benzoato: en este lote el conservante es el parabeno. Entibia el agua al baño María, sin pasar de ", "50 °C", "."]
         : ["Ponte guantes. Pesa ", g("agua"), " de agua en el vaso principal (nada de grifo) y disuelve ", g("benz"), " de benzoato de sodio. Entibia el agua al baño María, sin pasar de ", "50 °C", "."], ref: "Fría, la lidocaína tarda mucho más en entrar" });
@@ -1398,6 +1412,7 @@
         : ["Haz la papilla: ", g("hec"), " de HEC + ", g("gli"), " de glicerina + ", g("pg"), " de PG. Mezcla hasta que no quede polvo seco."] });
       L.push({ id: "b3", t: ["Vierte la papilla despacio sobre el agua con lidocaína, removiendo sin hacer remolino."], ref: "Trucos 1 y 7" });
       L.push({ id: "b4", t: ["Bate igual que siempre. En agua algo ácida tarda un poco más: espera ", "~10 minutos", " a que espese."], ref: "Prueba María", reloj: true });
+      }
       L.push({ id: "l4", t: ["Mide el pH del gel terminado y apúntalo en el lote. Objetivo ", "5,5–6,5", "."] });
       L.push({ id: "l4b", t: ["Solo si quedó por debajo de 5,5: TEA pura de ", "0,10 g", " en 0,10 g, removiendo 2 min y midiendo cada vez, hasta ", "5,5", ". Tope ", fmt(r.lido * 0.2) + " g", ". Si se enturbia, para. Apunta los gramos de TEA."], ref: "Prueba: unos 0,8 g por 100 g para subir de 4,8 a 5,5 (cálculo, no medido)" });
       if (r.esen > 0) {
@@ -1548,7 +1563,7 @@
     for (const k of orden(calc.rid)) {
       if (!(r[k] > 0)) continue;
       const real = num(calc.reales[k]);
-      const corto = { metil: "metilparabeno", propil: "propilparabeno", banoAgua: "baño agua", banoAlg: "alginato", lactato: "lactato Ca", cacao: "manteca cacao", coco: "aceite coco", almendras: "almendras", vitE: "vit. E", aroma: "aroma", agua: "agua", alcohol: "alcohol 96°", lido: "lidocaína", citL: "cítrico (lidocaína)", reserva: "agua solución", arg: "arginina", cit: "cítrico", hec: "HEC", gli: "glicerina", pg: "PG", menta: "sol. menta", benz: "benzoato", esen: "esencia", ps20: "polisorbato 20" }[k];
+      const corto = { metil: "metilparabeno", propil: "propilparabeno", banoAgua: "baño agua", banoAlg: "alginato", lactato: "lactato Ca", cacao: "manteca cacao", coco: "aceite coco", almendras: "almendras", vitE: "vit. E", aroma: "aroma", agua: "agua", alcohol: "alcohol 96°", lido: "lidocaína", citL: "cítrico (lidocaína)", reserva: "agua solución", arg: "arginina", cit: "cítrico", hec: "HEC", gli: "glicerina", pg: "PG", menta: "sol. menta", benz: "benzoato", aguaR: "agua reservada", esen: "esencia", ps20: "polisorbato 20" }[k];
       partes.push(corto + " " + fmt(real ?? r[k]));
       if (real == null) sinReal.push(corto);
     }
