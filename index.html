@@ -357,7 +357,7 @@
   .video .barras i { display: block; height: 100%; width: 0; background: #4cd9e0; }
   .video .cab { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; font-size: .85rem; color: #a9c4c4; }
   .video .escena { display: grid; align-content: center; justify-items: center; gap: 18px; text-align: center; max-width: 620px; margin: 0 auto; width: 100%; overflow-y: auto; }
-  .video .dibujo { width: min(56vw, 240px); aspect-ratio: 1; color: #4cd9e0; }
+  .video .dibujo { width: min(94vw, 440px); aspect-ratio: 320 / 230; color: #4cd9e0; border-radius: 20px; overflow: hidden; background: #132224; }
   .video .num { font-size: .8rem; letter-spacing: .12em; text-transform: uppercase; color: #ffb59a; font-weight: 700; }
   .video .texto { font-size: clamp(1.15rem, 4.6vw, 1.6rem); line-height: 1.35; }
   .video .texto b { color: #4cd9e0; font-family: var(--mono); white-space: nowrap; }
@@ -384,6 +384,22 @@
   @keyframes vLate { from { transform: scale(.92); opacity: .7; } to { transform: scale(1.06); opacity: 1; } }
   .video svg .bate { animation: vBate 1s ease-in-out infinite alternate; transform-box: fill-box; transform-origin: 50% 0; }
   @keyframes vBate { from { transform: rotate(-18deg); } to { transform: rotate(18deg); } }
+  .video svg .chorro { stroke-dasharray: 7 6; animation: vChorro .5s linear infinite; }
+  @keyframes vChorro { to { stroke-dashoffset: -13; } }
+  .video svg .vp-sacude { animation: vpSac .35s ease-in-out infinite alternate; }
+  @keyframes vpSac { from { transform: rotate(-3deg); } to { transform: rotate(3deg); } }
+  .video svg .vp-bate { animation: vpBate .4s ease-in-out infinite alternate; }
+  @keyframes vpBate { from { transform: rotate(-6deg); } to { transform: rotate(5deg); } }
+  .video svg .vp-sube { animation: vpSube 1.6s ease-in-out infinite alternate; }
+  @keyframes vpSube { from { transform: rotate(4deg); } to { transform: rotate(-6deg); } }
+  .video svg .vp-pulsa { animation: vpPulsa .8s ease-in-out infinite alternate; }
+  @keyframes vpPulsa { from { transform: translate(0, 0); } to { transform: translate(3px, 3px); } }
+  .video svg .vp-fiesta { animation: vpFiesta .45s ease-in-out infinite alternate; }
+  @keyframes vpFiesta { from { transform: rotate(-8deg); } to { transform: rotate(8deg); } }
+  .video svg .vp-cabeza { animation: vpCab 1.8s ease-in-out infinite alternate; }
+  .video svg .vp-cola { animation: vpCola 1.3s ease-in-out infinite alternate; }
+  @keyframes vpCola { from { transform: rotate(-9deg); } to { transform: rotate(10deg); } }
+  @keyframes vpCab { from { transform: translateY(0); } to { transform: translateY(2.5px); } }
   @media (prefers-reduced-motion: reduce) { .video svg * { animation: none !important; } .video .escena.entra { animation: none; } }
   @media (max-width: 640px) {
     body { padding-block: env(safe-area-inset-top, 0px) calc(96px + env(safe-area-inset-bottom, 0px)); }
@@ -1556,19 +1572,62 @@
     }));
   }
   // ── Modo video receta (21/11): los mismos pasos de la app, en pantalla completa, con dibujo y voz ──
-  const VSVG = {
-    pesar: '<svg viewBox="0 0 200 200" fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"><rect x="30" y="140" width="140" height="34" rx="8"/><rect x="70" y="150" width="60" height="14" rx="3" class="late" fill="currentColor" stroke="none" opacity=".5"/><path d="M45 140h110"/><g class="late"><path d="M68 70h64l-8 66H76z"/><path d="M80 92h40" opacity=".6"/></g></svg>',
-    bowl: '<svg viewBox="0 0 200 200" fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round"><clipPath id="vclip"><path d="M30 80h140c0 50-30 86-70 86S30 130 30 80z"/></clipPath><rect class="agua" x="20" y="80" width="160" height="90" fill="currentColor" opacity=".35" stroke="none" clip-path="url(#vclip)"/><path d="M30 80h140c0 50-30 86-70 86S30 130 30 80z"/><path d="M100 20v40" class="cae"/></svg>',
-    micro: '<svg viewBox="0 0 200 200" fill="none" stroke="currentColor" stroke-width="6" stroke-linejoin="round"><rect x="20" y="45" width="160" height="110" rx="12"/><rect x="34" y="60" width="100" height="80" rx="6" class="late" fill="currentColor" opacity=".18"/><ellipse cx="84" cy="122" rx="34" ry="8" class="gira" stroke-dasharray="14 10"/><circle cx="158" cy="80" r="7"/><path d="M150 108h16M150 124h16"/></svg>',
-    mirar: '<svg viewBox="0 0 200 200" fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round"><circle cx="100" cy="100" r="64" opacity=".35"/><path d="M40 100s24-40 60-40 60 40 60 40-24 40-60 40-60-40-60-40z"/><circle cx="100" cy="100" r="16" class="late" fill="currentColor"/><path d="M150 40l8-8M164 60h12M136 28V16" class="late"/></svg>',
-    verter: '<svg viewBox="0 0 200 200" fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"><path d="M30 120h120c0 34-24 56-60 56s-60-22-60-56z"/><g class="inclina"><path d="M112 30h52l-6 56h-40z"/></g><path d="M112 70c-6 14-14 30-20 44" opacity=".7" class="late"/></svg>',
-    polvo: '<svg viewBox="0 0 200 200" fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round"><path d="M30 120h140c0 34-30 56-70 56s-70-22-70-56z"/><g fill="currentColor" stroke="none"><circle class="cae" cx="84" cy="60" r="5"/><circle class="cae" cx="102" cy="52" r="5"/><circle class="cae" cx="118" cy="62" r="5"/></g><path d="M70 30h60"/></svg>',
-    batir: '<svg viewBox="0 0 200 200" fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round"><path d="M30 110h140c0 38-30 64-70 64s-70-26-70-64z"/><rect x="38" y="110" width="124" height="20" fill="currentColor" opacity=".3" stroke="none" class="late"/><g class="bate"><path d="M100 20v70"/><path d="M100 90c-16 0-22 30 0 40 22-10 16-40 0-40z"/></g></svg>',
-    ph: '<svg viewBox="0 0 200 200" fill="none" stroke="currentColor" stroke-width="6" stroke-linejoin="round"><rect x="70" y="20" width="60" height="110" rx="10"/><rect x="80" y="34" width="40" height="30" rx="4" class="late" fill="currentColor" opacity=".35"/><path d="M92 130v40l8 10 8-10v-40"/></svg>',
-    gotas: '<svg viewBox="0 0 200 200" fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round"><path d="M30 120h140c0 34-30 56-70 56s-70-22-70-56z"/><g fill="#ffb59a" stroke="none"><path class="cae" d="M80 50c-8 12-8 20 0 20s8-8 0-20z"/><path class="cae" d="M100 44c-8 12-8 20 0 20s8-8 0-20z"/><path class="cae" d="M120 50c-8 12-8 20 0 20s8-8 0-20z"/></g></svg>',
-    frasco: '<svg viewBox="0 0 200 200" fill="none" stroke="currentColor" stroke-width="6" stroke-linejoin="round"><rect x="62" y="24" width="76" height="22" rx="4"/><path d="M56 46h88v120a14 14 0 0 1-14 14H70a14 14 0 0 1-14-14z"/><rect x="66" y="96" width="68" height="38" rx="4" class="late" fill="currentColor" opacity=".3"/></svg>',
-    listo: '<svg viewBox="0 0 200 200" fill="none" stroke="currentColor" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"><circle cx="100" cy="100" r="70" class="late"/><path d="M66 102l24 24 46-50"/></svg>'
-  };
+  // Gato de laboratorio (bata, lentes, guantes) detrás de su mesa; cada paso cambia el brazo y lo que hay en la mesa
+  function vPersona(dib) {
+    const B = "#eef6f6", T = "#4cd9e0", N = "#ffb59a", V = "#cfe9ea", G = "#35575a";
+    const brazo = (sx, sy, hx, hy, cls, cosa) => {
+      const mx = (sx + hx) / 2 + (hy < sy ? 10 : 0), my = Math.max(sy, hy) + 20;
+      return '<g class="' + (cls || "") + '" style="transform-origin:' + sx + 'px ' + sy + 'px"><path d="M' + sx + ' ' + sy + 'Q' + mx + ' ' + my + ' ' + hx + ' ' + hy + '" stroke="' + B + '" stroke-width="14" stroke-linecap="round" fill="none"/>' + (cosa || "") + '<circle cx="' + hx + '" cy="' + hy + '" r="8.5" fill="' + T + '"/></g>';
+    };
+    const der = (hx, hy, cls, cosa) => brazo(138, 128, hx, hy, cls, cosa);
+    const bowl = (color, sube) => '<clipPath id="vpc"><path d="M188 152h104c0 24-21 38-52 38s-52-14-52-38z"/></clipPath><g clip-path="url(#vpc)"><rect' + (sube ? ' class="agua"' : '') + ' x="186" y="160" width="110" height="34" fill="' + color + '" opacity=".75"/></g><path d="M186 150h108c0 26-22 40-54 40s-54-14-54-40z" fill="none" stroke="' + V + '" stroke-width="4" stroke-linejoin="round"/>';
+    const caen = (x, y, color) => '<g fill="' + color + '"><circle class="cae" cx="' + (x - 7) + '" cy="' + y + '" r="3"/><circle class="cae" cx="' + x + '" cy="' + (y - 4) + '" r="3"/><circle class="cae" cx="' + (x + 7) + '" cy="' + y + '" r="3"/></g>';
+    const chorro = (d, color) => '<path class="chorro" d="' + d + '" stroke="' + color + '" stroke-width="5" stroke-linecap="round" fill="none"/>';
+    const pomo = (x) => '<rect x="' + (x + 9) + '" y="126" width="18" height="9" rx="2" fill="' + V + '"/><rect x="' + x + '" y="135" width="36" height="55" rx="8" fill="#ff9d42" opacity=".9"/><rect x="' + x + '" y="135" width="36" height="55" rx="8" fill="none" stroke="' + V + '" stroke-width="3.5"/><rect x="' + (x + 6) + '" y="152" width="24" height="16" rx="2" fill="' + B + '" opacity=".85"/>';
+    let izq = brazo(82, 128, 70, 176, "", ""), mesa = "", mano = "", boca = '<path d="M103 96q3.5 5 7 0q3.5 5 7 0" stroke="#7a3b2e" stroke-width="2.5" stroke-linecap="round" fill="none"/>';
+    if (dib === "pesar") {
+      mesa = '<rect x="188" y="172" width="100" height="18" rx="5" fill="' + G + '"/><rect x="224" y="177" width="30" height="8" rx="2" fill="' + T + '" class="late"/><path d="M194 171h88" stroke="' + V + '" stroke-width="4" stroke-linecap="round"/><path d="M214 130h48l-6 40h-36z" fill="none" stroke="' + V + '" stroke-width="4" stroke-linejoin="round"/><path d="M219 156h38l-2 14h-34z" fill="' + B + '" opacity=".7"/>' + caen(240, 122, B);
+      mano = der(232, 92, "vp-sacude", '<path d="M232 92l12 14" stroke="' + V + '" stroke-width="4" stroke-linecap="round"/><ellipse cx="246" cy="108" rx="7" ry="4" fill="' + V + '"/>');
+    } else if (dib === "bowl") {
+      mesa = bowl(T, true) + chorro("M250 92q-3 30-8 62", T);
+      mano = der(222, 94, "", '<path d="M210 60h36l-5 36h-26z" transform="rotate(38 228 78)" fill="' + T + '" fill-opacity=".35" stroke="' + V + '" stroke-width="4" stroke-linejoin="round"/>');
+    } else if (dib === "micro") {
+      mesa = '<rect x="190" y="110" width="118" height="80" rx="8" fill="#1b2c2e" stroke="' + V + '" stroke-width="4"/><rect x="200" y="120" width="72" height="60" rx="5" fill="' + N + '" opacity=".4" class="late"/><path d="M220 172c0-8 0-14 0-18h32c0 4 0 10 0 18z" fill="' + T + '" fill-opacity=".4" stroke="' + V + '" stroke-width="3"/><ellipse cx="236" cy="174" rx="26" ry="4" fill="none" stroke="' + V + '" stroke-width="2.5" class="chorro"/><circle cx="290" cy="132" r="5" fill="' + T + '"/><text x="290" y="160" text-anchor="middle" font-size="11" font-family="monospace" fill="' + T + '" class="late">1:00</text><g stroke="' + N + '" stroke-width="3" stroke-linecap="round" fill="none" class="late"><path d="M216 100q4-6 0-12M236 100q4-6 0-12M256 100q4-6 0-12"/></g>';
+      mano = der(186, 150, "vp-pulsa", "");
+    } else if (dib === "mirar") {
+      mesa = '<circle cx="282" cy="52" r="15" fill="' + N + '"/><g stroke="' + N + '" stroke-width="4" stroke-linecap="round" class="late"><path d="M282 26V14M302 34l9-9M310 54h12M262 34l-9-9"/></g><g fill="' + B + '" class="late"><path d="M252 96l3 7 7 3-7 3-3 7-3-7-7-3 7-3z"/></g>';
+      mano = der(212, 92, "vp-sube", '<path d="M192 70h48c0 16-10 24-24 24s-24-8-24-24z" fill="' + T + '" fill-opacity=".3" stroke="' + V + '" stroke-width="4" stroke-linejoin="round"/>');
+      boca = '<ellipse cx="110" cy="99" rx="3.5" ry="4.5" fill="#7a3b2e"/>';
+    } else if (dib === "verter") {
+      mesa = bowl(T, false) + chorro("M248 96q-2 28-5 58", B);
+      mano = der(222, 96, "", '<path d="M212 68h30l-4 30h-22z" transform="rotate(42 227 83)" fill="' + B + '" fill-opacity=".45" stroke="' + V + '" stroke-width="4" stroke-linejoin="round"/>');
+    } else if (dib === "polvo") {
+      mesa = bowl(T, false) + caen(242, 124, B);
+      mano = der(232, 96, "vp-sacude", '<path d="M224 80h24l-3 20h-18z" transform="rotate(62 236 90)" fill="' + B + '" fill-opacity=".6" stroke="' + V + '" stroke-width="4" stroke-linejoin="round"/>');
+    } else if (dib === "batir") {
+      mesa = bowl(T, false) + '<path d="M212 168q28-12 56 0" stroke="' + B + '" stroke-width="3" stroke-linecap="round" fill="none" class="late"/>';
+      mano = der(240, 120, "vp-bate", '<path d="M240 120v50" stroke="' + V + '" stroke-width="5" stroke-linecap="round"/>');
+    } else if (dib === "ph") {
+      mesa = bowl(T, false) + '<text x="292" y="112" text-anchor="middle" font-size="15" font-weight="700" font-family="monospace" fill="' + N + '" class="late">pH</text>';
+      mano = der(240, 118, "", '<path d="M240 130v36" stroke="' + V + '" stroke-width="4" stroke-linecap="round"/><rect x="229" y="80" width="22" height="50" rx="6" fill="' + G + '" stroke="' + V + '" stroke-width="3"/><rect x="233" y="86" width="14" height="11" rx="2" fill="' + T + '" class="late"/>');
+    } else if (dib === "gotas") {
+      mesa = bowl("#ffab52", false) + caen(240, 124, "#ff9d42");
+      mano = der(240, 96, "vp-pulsa", '<path d="M240 84v26" stroke="' + V + '" stroke-width="6" stroke-linecap="round"/><circle cx="240" cy="78" r="8" fill="' + N + '"/>');
+    } else if (dib === "frasco") {
+      mesa = pomo(196) + pomo(250);
+      mano = der(214, 118, "vp-pulsa", "");
+    } else {
+      mesa = pomo(184) + pomo(228) + pomo(272) + '<g fill="' + N + '" class="late"><path d="M40 40l3 8 8 3-8 3-3 8-3-8-8-3 8-3zM200 44l3 8 8 3-8 3-3 8-3-8-8-3 8-3zM296 84l2 6 6 2-6 2-2 6-2-6-6-2 6-2z"/></g>';
+      izq = brazo(82, 128, 54, 72, "vp-fiesta", "");
+      mano = der(166, 72, "vp-fiesta", "");
+      boca = '<path d="M102 96q8 12 16 0z" fill="#7a3b2e"/><path d="M106 101q4 4 8 0" fill="#ff8fa3"/>';
+    }
+    return '<svg viewBox="0 0 320 230" role="img" aria-label="Gato de laboratorio haciendo el paso"><path class="vp-cola" style="transform-origin:76px 186px" d="M76 186q-34-6-36-40q-1-14 10-16" stroke="#f0a35e" stroke-width="11" stroke-linecap="round" fill="none"/>' + izq
+      + '<path d="M84 120q26-12 52 0l12 76H72z" fill="' + B + '"/><path d="M110 116v76" stroke="#b9cfd0" stroke-width="2"/><circle cx="116" cy="140" r="2.5" fill="#b9cfd0"/><circle cx="116" cy="160" r="2.5" fill="#b9cfd0"/><path d="M96 116l14 14 14-14" fill="none" stroke="#b9cfd0" stroke-width="3" stroke-linejoin="round"/>'
+      + '<g class="vp-cabeza"><rect x="102" y="98" width="16" height="20" fill="#e8935a"/><path d="M88 66l-4-30 24 16zM132 66l4-30-24 16z" fill="#f0a35e"/><path d="M90 60l-2-16 13 9zM130 60l2-16-13 9z" fill="#ff8fa3"/><ellipse cx="110" cy="80" rx="27" ry="24" fill="#f0a35e"/><path d="M104 58l3 10M110 56v11M116 58l-3 10" stroke="#c9763a" stroke-width="3" stroke-linecap="round"/><ellipse cx="110" cy="94" rx="13" ry="9" fill="#fbe3c4"/><path d="M84 82h52" stroke="' + G + '" stroke-width="3"/><circle cx="99" cy="81" r="8.5" fill="#0d1414" fill-opacity=".2" stroke="' + T + '" stroke-width="3"/><circle cx="121" cy="81" r="8.5" fill="#0d1414" fill-opacity=".2" stroke="' + T + '" stroke-width="3"/><ellipse cx="99" cy="82" rx="2.2" ry="4" fill="#1d2a16"/><ellipse cx="121" cy="82" rx="2.2" ry="4" fill="#1d2a16"/><path d="M107 90h6l-3 4z" fill="#ff8fa3"/><g stroke="#fbe3c4" stroke-width="1.8" stroke-linecap="round"><path d="M96 93l-18-3M96 96l-18 3M124 93l18-3M124 96l18 3"/></g>' + boca + '</g>'
+      + '<rect x="0" y="190" width="320" height="40" fill="#16292b"/><rect x="0" y="187" width="320" height="7" rx="3.5" fill="' + G + '"/>'
+      + mesa + mano + '</svg>';
+  }
   const VDIB = { k1: "pesar", k2: "bowl", k3: "micro", l2c: "mirar", k4: "micro", k5: "verter", k6: "polvo", k7: "batir", l4: "ph", l4b: "ph", mand1: "verter", mand2: "gotas", mand: "frasco", l5: "frasco", f1: "frasco", f2: "frasco" };
   const vid = { i: 0, esc: [], t: null, pausa: false, voz: true, ini: 0, dur: 0, raf: 0 };
   const vHablable = (s) => String(s)
@@ -1592,7 +1651,7 @@
     if (e.tipo === "ingr") {
       kids.push(h("div", { class: "num" }, "Necesitas"), h("div", { class: "texto" }, e.titulo), h("ul", { class: "ingr" }, e.ingr.map(([a, b]) => h("li", {}, h("span", {}, a), h("b", {}, b)))));
     } else {
-      const d = h("div", { class: "dibujo" }); d.innerHTML = VSVG[e.dib];
+      const d = h("div", { class: "dibujo" }); d.innerHTML = vPersona(e.dib);
       kids.push(d);
       if (e.tipo === "paso") kids.push(h("div", { class: "num" }, "Paso " + e.n));
       kids.push(h("div", { class: "texto" }, e.t.map((x, i) => i % 2 ? h("b", {}, x) : x)));
